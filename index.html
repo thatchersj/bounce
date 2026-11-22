@@ -46,7 +46,6 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Custom subtle scrollbars for side panels & history lists */
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
@@ -63,7 +62,6 @@
       background: rgba(255, 255, 255, 0.28);
     }
 
-    /* Pulse & glow animations */
     @keyframes pulseGlow {
       0%, 100% { transform: scale(1); filter: brightness(1); }
       50% { transform: scale(1.02); filter: brightness(1.15); }
@@ -72,17 +70,15 @@
       animation: pulseGlow 2.2s infinite ease-in-out;
     }
 
-    /* Bottom sheet slide transition on mobile */
     .drawer-sheet {
       transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
     }
 
-    /* Color input styling */
     input[type="color"] {
       -webkit-appearance: none;
       border: none;
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 10px;
       cursor: pointer;
       background: transparent;
@@ -97,25 +93,25 @@
     }
   </style>
 </head>
-<body class="flex flex-col lg:flex-row items-center justify-center w-full h-[100dvh] overflow-hidden select-none">
+<body class="flex flex-col min-[960px]:flex-row items-center justify-center w-full h-[100dvh] overflow-hidden select-none">
 
   <!-- Toast Notification Banner -->
   <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2 w-[90%] max-w-sm"></div>
 
   <!-- =====================================================================
-       LEFT SIDEBAR (Desktop Persistent Panel / Mobile Slide-Up Sheet)
-       Stats, Streak, & Match History
+       LEFT SIDEBAR (Desktop >= 960px Persistent Panel / Mobile Slide-Up Sheet)
+       Separate Daily Challenge Stats & Random/Custom Prediction Record
   ====================================================================== -->
   <aside id="panel-stats"
-    class="drawer-sheet fixed inset-x-0 bottom-0 z-40 max-h-[82dvh] rounded-t-3xl bg-[#14161D]/95 backdrop-blur-xl border-t border-white/10 p-5 flex flex-col gap-4 translate-y-full opacity-0 pointer-events-none
-           lg:static lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto lg:w-80 xl:w-96 lg:h-[94dvh] lg:max-h-[94dvh] lg:rounded-3xl lg:border lg:border-white/10 lg:mr-5 lg:shadow-2xl">
+    class="drawer-sheet fixed inset-x-0 bottom-0 z-40 max-h-[85dvh] rounded-t-3xl bg-[#14161D]/95 backdrop-blur-xl border-t border-white/10 p-5 flex flex-col gap-3.5 overflow-y-auto translate-y-full opacity-0 pointer-events-none
+           min-[960px]:static min-[960px]:translate-y-0 min-[960px]:opacity-100 min-[960px]:pointer-events-auto min-[960px]:w-80 xl:w-96 min-[960px]:h-[94dvh] min-[960px]:max-h-[94dvh] min-[960px]:rounded-3xl min-[960px]:border min-[960px]:border-white/10 min-[960px]:mr-5 min-[960px]:shadow-2xl">
     
-    <!-- Mobile Drawer Handle & Close -->
-    <div class="flex items-center justify-between lg:hidden">
+    <!-- Mobile Drawer Handle -->
+    <div class="flex items-center justify-between min-[960px]:hidden shrink-0">
       <div class="w-10 h-1.5 rounded-full bg-white/20 mx-auto"></div>
     </div>
 
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between shrink-0">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-amber-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -123,262 +119,580 @@
           </svg>
         </div>
         <div>
-          <h2 class="text-sm font-extrabold tracking-wide uppercase text-white">Prediction Record</h2>
-          <p class="text-[11px] text-slate-400">Local stats & replayable history</p>
+          <h2 class="text-sm font-extrabold tracking-wide uppercase text-white">Player Records</h2>
+          <p class="text-[11px] text-slate-400">Daily Challenge vs Standard Stats</p>
         </div>
       </div>
-      <button onclick="closeDrawers()" class="lg:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300">
+      <button onclick="closeDrawers()" class="min-[960px]:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-2 gap-2.5">
-      <div class="bg-[#1B1E28] rounded-2xl p-3 border border-white/5">
-        <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Win Rate</div>
-        <div id="stat-winrate" class="font-mono-num text-2xl font-black text-white mt-0.5">0%</div>
-        <div id="stat-record" class="text-xs text-slate-400 mt-0.5">0W - 0L</div>
+    <!-- 1. Dedicated Daily Challenge Stats Block -->
+    <div class="bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-slate-900/60 rounded-2xl p-3.5 border border-indigo-400/25 shrink-0">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+          <span>📅</span> Daily Challenge Record
+        </span>
+        <span id="daily-status-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-200">
+          Available
+        </span>
       </div>
-      <div class="bg-[#1B1E28] rounded-2xl p-3 border border-white/5">
-        <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Current Streak</div>
-        <div class="flex items-baseline gap-2 mt-0.5">
-          <span id="stat-streak" class="font-mono-num text-2xl font-black text-emerald-400">0</span>
-          <span id="stat-best" class="text-xs text-slate-400">Best: 0</span>
+      <div class="grid grid-cols-3 gap-2 text-center">
+        <div class="bg-black/30 rounded-xl p-2 border border-white/5">
+          <div class="text-[10px] uppercase text-slate-400 font-semibold">Streak</div>
+          <div id="daily-stat-streak" class="font-mono-num text-lg font-black text-amber-400">0🔥</div>
         </div>
-        <div id="stat-bias" class="text-[11px] text-slate-400 mt-0.5 truncate">No picks yet</div>
+        <div class="bg-black/30 rounded-xl p-2 border border-white/5">
+          <div class="text-[10px] uppercase text-slate-400 font-semibold">Best</div>
+          <div id="daily-stat-best" class="font-mono-num text-lg font-black text-white">0</div>
+        </div>
+        <div class="bg-black/30 rounded-xl p-2 border border-white/5">
+          <div class="text-[10px] uppercase text-slate-400 font-semibold">Record</div>
+          <div id="daily-stat-record" class="font-mono-num text-sm font-extrabold text-emerald-300 mt-1">0W-0L</div>
+        </div>
       </div>
     </div>
 
-    <!-- Daily Challenge Shortcut -->
-    <button onclick="loadDailySeed(); closeDrawers();"
-      class="w-full py-2.5 px-3.5 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 hover:from-indigo-500/30 hover:to-pink-500/30 border border-indigo-400/30 flex items-center justify-between transition active:scale-[0.99]">
-      <div class="flex items-center gap-2.5 text-left">
-        <span class="text-lg">📅</span>
-        <div>
-          <div class="text-xs font-extrabold text-white tracking-wide">DAILY CHALLENGE</div>
-          <div id="daily-seed-label" class="font-mono-num text-[11px] text-indigo-300">Seed: Loading...</div>
+    <!-- 2. Standard (Random & Custom) Stats Block -->
+    <div class="bg-[#1B1E28] rounded-2xl p-3.5 border border-white/5 shrink-0">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300">🎲 Random & Custom Record</span>
+        <span id="stat-bias" class="text-[10px] text-slate-400 font-medium">No picks yet</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div class="bg-black/25 rounded-xl p-2.5 border border-white/5">
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Win Rate</div>
+          <div id="stat-winrate" class="font-mono-num text-xl font-black text-white mt-0.5">0%</div>
+          <div id="stat-record" class="text-[11px] text-slate-400">0W - 0L</div>
+        </div>
+        <div class="bg-black/25 rounded-xl p-2.5 border border-white/5">
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Streak</div>
+          <div class="flex items-baseline gap-1.5 mt-0.5">
+            <span id="stat-streak" class="font-mono-num text-xl font-black text-emerald-400">0</span>
+            <span id="stat-best" class="text-[11px] text-slate-400">Best: 0</span>
+          </div>
+          <div class="text-[11px] text-slate-500">Standard races</div>
         </div>
       </div>
-      <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-500 text-white">Play</span>
-    </button>
+    </div>
 
     <!-- Match History -->
-    <div class="flex items-center justify-between mt-1">
+    <div class="flex items-center justify-between mt-0.5 shrink-0">
       <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Recent Races</span>
       <button onclick="clearHistory()" class="text-[11px] text-slate-500 hover:text-rose-400 transition">Clear</button>
     </div>
 
-    <div id="history-list" class="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[140px]">
+    <div id="history-list" class="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[120px]">
       <div class="text-center text-xs text-slate-500 py-8">No completed races yet. Pick a side to start!</div>
     </div>
   </aside>
 
 
   <!-- =====================================================================
-       CENTER ARENA (Main Portrait Viewport — Full Level Always Visible)
+       CENTER VIEWPORT CONTAINER (Hosts 3 Distinct Full-Height Views):
+       1. #view-home   (Home Landing Screen)
+       2. #view-custom (Dedicated Custom Race Builder Page)
+       3. #view-arena  (Live Deterministic Physics Arena)
   ====================================================================== -->
-  <main id="center-arena" class="relative flex flex-col justify-between w-full max-w-[460px] h-[100dvh] lg:h-[94dvh] lg:rounded-[2rem] lg:border lg:border-white/10 lg:shadow-[0_0_60px_rgba(0,0,0,0.75)] bg-[#0D0E12] overflow-hidden px-3 pt-2.5 pb-3 sm:px-4">
+  <main id="center-shell" class="relative flex flex-col w-full max-w-[460px] h-[100dvh] min-[960px]:h-[94dvh] min-[960px]:rounded-[2rem] min-[960px]:border min-[960px]:border-white/10 min-[960px]:shadow-[0_0_60px_rgba(0,0,0,0.75)] bg-[#0D0E12] overflow-hidden">
 
-    <!-- Top Utility Bar: Seed Badge, Audio, Speed, & Mobile Drawer Triggers -->
-    <header class="flex items-center justify-between gap-1.5 z-20 shrink-0">
-      <!-- Seed Pill (Tap to Copy) -->
-      <button onclick="copyCurrentSeed()" title="Tap to copy race hash"
-        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition active:scale-95">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="header-seed-text" class="font-mono-num text-xs font-bold tracking-wider text-slate-200">BR-0000-0000</span>
-        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-        </svg>
-      </button>
-
-      <!-- Action Icon Buttons -->
-      <div class="flex items-center gap-1.5">
-        <!-- Speed Toggle (1x / 2x) -->
-        <button id="btn-speed" onclick="toggleSpeed()" title="Simulation Speed"
-          class="font-mono-num px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-extrabold text-slate-200 transition active:scale-95">
-          1x
-        </button>
-
-        <!-- Mute / Unmute ASMR Audio -->
-        <button id="btn-audio" onclick="toggleAudio()" title="Toggle ASMR Sound"
-          class="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 transition active:scale-95">
-          <svg id="icon-sound-on" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
-          </svg>
-          <svg id="icon-sound-off" class="w-4 h-4 hidden text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
-          </svg>
-        </button>
-
-        <!-- Mobile Stats Drawer Trigger -->
-        <button onclick="openDrawer('panel-stats')" title="Stats & History"
-          class="lg:hidden p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 transition active:scale-95 relative">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-          </svg>
-        </button>
-
-        <!-- Mobile Settings / Custom Drawer Trigger -->
-        <button onclick="openDrawer('panel-controls')" title="Themes, HUD & Seed Builder"
-          class="lg:hidden p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 transition active:scale-95">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
-          </svg>
-        </button>
-      </div>
-    </header>
-
-    <!-- Matchup Header: Left Count VS Right Count + Growth Rules (Matches Reference Screenshot) -->
-    <section class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 pt-2 pb-1.5 z-10 shrink-0">
-      <!-- Left Side Header -->
-      <div class="flex flex-col items-center text-center min-w-0">
+    <!-- ===================================================================
+         VIEW 1: HOME SCREEN (Landing Page)
+    ==================================================================== -->
+    <section id="view-home" class="flex flex-col justify-between w-full h-full p-5 sm:p-6 overflow-y-auto">
+      <!-- Top Bar: Quick Stats & Settings Triggers on Mobile -->
+      <div class="flex items-center justify-end shrink-0">
         <div class="flex items-center gap-1.5">
-          <span id="left-count-display" class="font-mono-num text-3xl sm:text-4xl font-black tracking-tight leading-none transition-transform"
-            style="color: var(--left-color); text-shadow: 0 0 22px var(--left-glow);">2</span>
+          <button onclick="openDrawer('panel-stats')" title="Records & Stats"
+            class="min-[960px]:hidden p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 transition active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </button>
+          <button onclick="openSettings()" title="Settings & Themes"
+            class="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 transition active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </button>
         </div>
-        <div id="left-rule-display" class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mt-1 truncate max-w-full px-1"
-          style="color: var(--left-color);">×2 EVERY 5 SECONDS</div>
       </div>
 
-      <!-- Center VS & Timer -->
-      <div class="flex flex-col items-center justify-center px-1.5">
-        <span class="text-sm sm:text-base font-black tracking-widest text-white/90">VS</span>
-        <span id="race-timer" class="font-mono-num text-[11px] font-bold text-slate-400 mt-0.5">00.0s</span>
+      <!-- Brand Hero Title -->
+      <div class="my-4 text-center space-y-2">
+        <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-white">
+          BOUNCE <span style="color: var(--left-color);">RACE</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 max-w-xs mx-auto leading-relaxed">
+          Analyze growth rules, calculate floor breakthroughs, and predict which side reaches the bottom first.
+        </p>
       </div>
 
-      <!-- Right Side Header -->
-      <div class="flex flex-col items-center text-center min-w-0">
-        <div class="flex items-center gap-1.5">
-          <span id="right-count-display" class="font-mono-num text-3xl sm:text-4xl font-black tracking-tight leading-none transition-transform"
-            style="color: var(--right-color); text-shadow: 0 0 22px var(--right-glow);">400</span>
+      <!-- Primary Home Action Cards -->
+      <div class="space-y-3 my-auto">
+        <!-- 1. Daily Challenge Card (One guess per UTC day; dimmed/watch-only once played) -->
+        <button id="home-daily-btn" onclick="launchDailyChallenge()"
+          class="w-full text-left p-4 rounded-2xl border transition active:scale-[0.99] relative overflow-hidden group bg-gradient-to-r from-indigo-500/20 via-purple-500/15 to-pink-500/15 border-indigo-400/35 hover:border-indigo-400/60">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-11 h-11 rounded-2xl bg-white/10 border border-indigo-400/35 overflow-hidden flex flex-col items-center justify-between shrink-0 shadow-inner">
+                <div id="home-daily-cal-month" class="w-full bg-rose-500 text-[9px] font-black uppercase tracking-widest text-white text-center leading-tight py-0.5">
+                  NOV
+                </div>
+                <div id="home-daily-cal-day" class="font-mono-num text-base font-black text-white leading-none my-auto">
+                  22
+                </div>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-black tracking-wide uppercase text-white">Daily Challenge</span>
+                </div>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Streak</div>
+              <div id="home-daily-streak" class="font-mono-num text-xl font-black text-amber-400 leading-tight">0🔥</div>
+            </div>
+          </div>
+        </button>
+
+        <!-- 2. Random Race Button -->
+        <button onclick="launchRandomRaceFromHome()"
+          class="w-full p-4 rounded-2xl font-black text-sm tracking-wider uppercase text-slate-950 transition active:scale-[0.99] flex items-center justify-between shadow-lg"
+          style="background: linear-gradient(135deg, var(--left-color), var(--right-color));">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">🎲</span>
+            <div class="text-left">
+              <div class="text-sm font-black">Random Race</div>
+            </div>
+          </div>
+          <span class="text-base font-black">PLAY →</span>
+        </button>
+
+        <!-- 3. Custom Race Builder & Settings Grid (Icons Swapped) -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <button onclick="showView('view-custom')"
+            class="p-3.5 rounded-2xl bg-[#1B1E28] hover:bg-[#222634] border border-white/10 text-left transition active:scale-[0.98] flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-cyan-500/15 text-cyan-300 flex items-center justify-center text-base shrink-0">🎨</div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-white">Custom Race</div>
+          </button>
+
+          <button onclick="openSettings()"
+            class="p-3.5 rounded-2xl bg-[#1B1E28] hover:bg-[#222634] border border-white/10 text-left transition active:scale-[0.98] flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-300 flex items-center justify-center text-base shrink-0">🛠️</div>
+            <div class="text-xs font-extrabold uppercase tracking-wide text-white">Settings</div>
+          </button>
         </div>
-        <div id="right-rule-display" class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mt-1 truncate max-w-full px-1"
-          style="color: var(--right-color);">+100 EVERY FLOOR</div>
+
+        <!-- 4. Import Race Hash Box -->
+        <div class="p-3.5 rounded-2xl bg-[#1B1E28]/90 border border-white/10 space-y-2">
+          <div class="flex gap-2">
+            <input id="home-import-input" type="text" placeholder="Paste seed hash here..."
+              class="flex-1 min-w-0 bg-black/40 border border-white/10 rounded-xl px-3 py-2 font-mono-num text-xs text-white placeholder-slate-500 focus:outline-none focus:border-white/30 uppercase" />
+            <button onclick="importRaceFromHome()"
+              class="px-4 py-2 rounded-xl bg-white text-slate-950 font-extrabold text-xs hover:bg-slate-200 transition active:scale-95">
+              Load
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Summary Pill -->
+      <div class="pt-3 text-center">
+        <button onclick="openDrawer('panel-stats')" class="text-[11px] font-semibold text-slate-400 hover:text-white transition">
+          Daily Record: <span id="home-footer-daily" class="font-mono-num text-indigo-300 font-bold">0W-0L</span>
+          <span class="mx-1.5 text-slate-600">•</span>
+          Standard Record: <span id="home-footer-std" class="font-mono-num text-emerald-300 font-bold">0W-0L</span>
+        </button>
       </div>
     </section>
 
-    <!-- Active Prediction Pill Badge (Shown once user picks) -->
-    <div id="user-pick-banner" class="hidden items-center justify-center gap-2 py-1 z-10 shrink-0">
-      <span id="user-pick-badge" class="text-[11px] font-extrabold uppercase tracking-wider px-3 py-0.5 rounded-full border">
-        YOUR PICK: LEFT
-      </span>
-    </div>
 
     <!-- ===================================================================
-         MAIN PHYSICS CANVAS CONTAINER (Full Level Always Visible)
+         VIEW 2: DEDICATED CUSTOM RACE BUILDER PAGE
     ==================================================================== -->
-    <div id="canvas-wrapper" class="relative flex-1 w-full min-h-0 my-1 rounded-2xl overflow-hidden" style="background-color: var(--bg-panel);">
-      <canvas id="sim-canvas" class="block w-full h-full"></canvas>
-
-      <!-- Optional Pro HUD Overlay (Toggleable) -->
-      <div id="pro-hud-overlay" class="hidden pointer-events-none absolute inset-x-2 top-2 flex justify-between text-[10px] font-mono-num z-10">
-        <div class="bg-black/65 backdrop-blur-md border border-white/10 rounded-xl px-2.5 py-1.5 space-y-0.5">
-          <div class="text-slate-400">DPS: <span id="hud-left-dps" class="text-white font-bold">0</span></div>
-          <div class="text-slate-400">DMG: <span id="hud-left-dmg" class="text-white font-bold">0</span></div>
+    <section id="view-custom" class="hidden flex-col justify-between w-full h-full p-4 sm:p-5 overflow-y-auto">
+      <!-- Top Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+        <button onclick="showView('view-home')"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95">
+          <span>← Home</span>
+        </button>
+        <div class="text-center">
+          <h2 class="text-sm font-black uppercase tracking-wider text-white">Custom Race Lab</h2>
+          <p class="text-[10px] text-slate-400">Configure exact rules & total floor hits</p>
         </div>
-        <div class="bg-black/65 backdrop-blur-md border border-white/10 rounded-xl px-2.5 py-1.5 space-y-0.5 text-right">
-          <div class="text-slate-400">DPS: <span id="hud-right-dps" class="text-white font-bold">0</span></div>
-          <div class="text-slate-400">DMG: <span id="hud-right-dmg" class="text-white font-bold">0</span></div>
-        </div>
+        <button onclick="randomizeBuilderInputs()" title="Randomize Builder"
+          class="px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95">
+          🎲
+        </button>
       </div>
 
-      <!-- Victory / Outcome Modal Overlay inside Arena -->
-      <div id="result-overlay" class="hidden absolute inset-0 z-30 bg-black/75 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center">
-        <div id="result-prediction-pill" class="text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full mb-3 border">
-          PREDICTION CORRECT!
-        </div>
-        <h2 id="result-winner-title" class="text-3xl sm:text-4xl font-black tracking-tight uppercase mb-1" style="color: var(--left-color);">
-          LEFT WINS!
-        </h2>
-        <p id="result-subtitle" class="text-xs sm:text-sm text-slate-300 font-medium mb-5">
-          Broke all 10 floors in 24.8s
-        </p>
-
-        <div class="grid grid-cols-2 gap-2.5 w-full max-w-xs mb-5">
-          <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5">
-            <div class="text-[10px] uppercase tracking-wider text-slate-400">Final Balls</div>
-            <div id="result-final-balls" class="font-mono-num text-sm font-extrabold text-white mt-0.5">512 vs 1,400</div>
+      <!-- Builder Form Body -->
+      <div class="space-y-3.5 my-3 flex-1 overflow-y-auto pr-0.5">
+        <!-- LEFT SIDE CONFIG CARD -->
+        <div class="bg-[#1B1E28] rounded-2xl p-3.5 border border-white/10 space-y-2.5" style="border-left: 3px solid var(--left-color);">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider" style="color: var(--left-color);">◀ Left Side Rules</span>
+            <span id="builder-l-preview" class="font-mono-num text-[11px] font-bold px-2 py-0.5 rounded bg-black/40 text-white">
+              2 start • ×2 every 5 seconds
+            </span>
           </div>
-          <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5">
-            <div class="text-[10px] uppercase tracking-wider text-slate-400">Race Seed</div>
-            <div id="result-seed-code" class="font-mono-num text-sm font-extrabold text-white mt-0.5">BR-8F4A-99C2</div>
-          </div>
-        </div>
 
-        <div class="flex flex-col gap-2 w-full max-w-xs">
-          <button onclick="generateRandomRace()"
-            class="w-full py-3 rounded-2xl bg-white text-slate-950 font-black text-sm tracking-wide hover:bg-slate-200 transition active:scale-[0.98] shadow-lg">
-            NEXT RANDOM RACE →
-          </button>
           <div class="grid grid-cols-2 gap-2">
-            <button onclick="replayCurrentSeed()"
-              class="py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition active:scale-95">
-              ↻ Replay Seed
-            </button>
-            <button onclick="shareCurrentSeed()"
-              class="py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition active:scale-95">
-              Share Hash
-            </button>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Starting Balls</label>
+              <input id="cb-l-start" type="number" min="1" max="5000" value="2" oninput="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-3 py-1.5 font-mono-num text-xs font-bold text-white focus:outline-none focus:border-white/30">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Operation</label>
+              <select id="cb-l-op" onchange="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-bold text-white focus:outline-none">
+                <option value="ADD">+ Add Balls</option>
+                <option value="MULT" selected>× Multiply Balls</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Amount (X)</label>
+              <input id="cb-l-val" type="number" step="0.1" min="0.1" max="5000" value="2" oninput="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2.5 py-1.5 font-mono-num text-xs font-bold text-white focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Every (Y)</label>
+              <input id="cb-l-int" type="number" min="1" max="5000" value="5" oninput="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2.5 py-1.5 font-mono-num text-xs font-bold text-white focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Unit</label>
+              <select id="cb-l-unit" onchange="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2 py-1.5 text-xs font-bold text-white focus:outline-none">
+                <option value="SEC" selected>Seconds</option>
+                <option value="BNC">Bounces</option>
+                <option value="FLR">Floors</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDE CONFIG CARD -->
+        <div class="bg-[#1B1E28] rounded-2xl p-3.5 border border-white/10 space-y-2.5" style="border-left: 3px solid var(--right-color);">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider" style="color: var(--right-color);">Right Side Rules ▶</span>
+            <span id="builder-r-preview" class="font-mono-num text-[11px] font-bold px-2 py-0.5 rounded bg-black/40 text-white">
+              350 start • +100 every 1 floor
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Starting Balls</label>
+              <input id="cb-r-start" type="number" min="1" max="5000" value="350" oninput="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-3 py-1.5 font-mono-num text-xs font-bold text-white focus:outline-none focus:border-white/30">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Operation</label>
+              <select id="cb-r-op" onchange="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-bold text-white focus:outline-none">
+                <option value="ADD" selected>+ Add Balls</option>
+                <option value="MULT">× Multiply Balls</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Amount (X)</label>
+              <input id="cb-r-val" type="number" step="0.1" min="0.1" max="5000" value="100" oninput="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2.5 py-1.5 font-mono-num text-xs font-bold text-white focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Every (Y)</label>
+              <input id="cb-r-int" type="number" min="1" max="5000" value="1" oninput="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2.5 py-1.5 font-mono-num text-xs font-bold text-white focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Unit</label>
+              <select id="cb-r-unit" onchange="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2 py-1.5 text-xs font-bold text-white focus:outline-none">
+                <option value="SEC">Seconds</option>
+                <option value="BNC">Bounces</option>
+                <option value="FLR" selected>Floors</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEVEL / FLOOR HP CONFIGURATION -->
+        <div class="bg-[#1B1E28] rounded-2xl p-3.5 border border-white/10 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-200">🧱 Level & Total Hits Required</span>
+            <span id="builder-floor-summary" class="font-mono-num text-[11px] text-emerald-300 font-bold">10 Floors • 45,000 Hits</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Total Hits</label>
+              <input id="cb-total-hits" type="number" min="1000" max="2000000" step="500" value="45000" oninput="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2.5 py-1.5 font-mono-num text-xs font-bold text-white focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Floors</label>
+              <input id="cb-floors" type="number" min="4" max="15" value="10" oninput="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2.5 py-1.5 font-mono-num text-xs font-bold text-white focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">HP Curve</label>
+              <select id="cb-curve" onchange="updateBuilderPreviews()"
+                class="w-full bg-black/45 border border-white/10 rounded-xl px-2 py-1.5 text-xs font-bold text-white focus:outline-none">
+                <option value="ESC" selected>Escalating</option>
+                <option value="FLAT">Even / Flat</option>
+                <option value="BOSS">Boss Finale</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Live Floor Breakdown Preview Strip -->
+          <div id="builder-floors-strip" class="font-mono-num text-[10px] text-slate-400 bg-black/35 rounded-xl p-2 border border-white/5 truncate">
+            Floors: 820 → 1,640 → ... → 8,200
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Custom Builder Actions -->
+      <div class="pt-2 border-t border-white/10 grid grid-cols-[1fr_auto] gap-2 shrink-0">
+        <button onclick="launchCustomRaceFromBuilder()"
+          class="py-3 px-4 rounded-2xl bg-white text-slate-950 font-black text-xs sm:text-sm tracking-wide uppercase hover:bg-slate-200 transition active:scale-[0.98] shadow-lg">
+          🚀 Launch Custom Race
+        </button>
+        <button onclick="copyCustomHashFromBuilder()"
+          class="py-3 px-3.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition active:scale-95">
+          📋 Copy Hash
+        </button>
+      </div>
+    </section>
+
 
     <!-- ===================================================================
-         BOTTOM INTERACTION BAR (Pre-Race Pick Controls / Live Race Controls)
+         VIEW 3: LIVE PHYSICS ARENA (Full Level Always Visible)
     ==================================================================== -->
-    <footer class="pt-1.5 z-20 shrink-0">
-      <!-- State A: Pre-Race Prediction Prompt -->
-      <div id="controls-predict" class="flex flex-col gap-2">
-        <div class="flex items-center justify-between px-1">
-          <span class="text-[11px] font-extrabold uppercase tracking-widest text-slate-300">Inspect floors & pick winner:</span>
-          <button onclick="startRace('NONE')" class="text-[11px] font-semibold text-slate-400 hover:text-white underline underline-offset-2">
-            Just Watch
+    <section id="view-arena" class="hidden flex-col justify-between w-full h-full px-3 pt-2.5 pb-3 sm:px-4 overflow-hidden">
+      <!-- Top Utility Bar -->
+      <header class="flex items-center justify-between gap-1 z-20 shrink-0">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <!-- Back to Home Button -->
+          <button onclick="returnToHome()" title="Back to Home Screen"
+            class="px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95 shrink-0">
+            ← Home
+          </button>
+
+          <!-- Seed Pill (Tap to Copy) -->
+          <button onclick="copyCurrentSeed()" title="Tap to copy race hash"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition active:scale-95 min-w-0">
+            <span id="arena-mode-dot" class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+            <span id="header-seed-text" class="font-mono-num text-[11px] font-bold tracking-wider text-slate-200 truncate">BR-0000-0000</span>
           </button>
         </div>
-        <div class="grid grid-cols-2 gap-2.5">
-          <button onclick="startRace('LEFT')"
-            class="animate-pick-pulse py-3 px-3 rounded-2xl font-black text-sm tracking-wider uppercase text-slate-950 transition active:scale-95 flex items-center justify-center gap-2 shadow-lg"
-            style="background-color: var(--left-color); box-shadow: 0 6px 24px var(--left-glow);">
-            <span>◀ PICK LEFT</span>
+
+        <!-- Action Icon Buttons -->
+        <div class="flex items-center gap-1 shrink-0">
+          <!-- Speed Toggle (1x / 2x / 4x) -->
+          <button id="btn-speed" onclick="toggleSpeed()" title="Simulation Speed"
+            class="font-mono-num px-2 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-extrabold text-slate-200 transition active:scale-95">
+            1x
           </button>
-          <button onclick="startRace('RIGHT')"
-            class="animate-pick-pulse py-3 px-3 rounded-2xl font-black text-sm tracking-wider uppercase text-slate-950 transition active:scale-95 flex items-center justify-center gap-2 shadow-lg"
-            style="background-color: var(--right-color); box-shadow: 0 6px 24px var(--right-glow);">
-            <span>PICK RIGHT ▶</span>
+
+          <!-- Mute / Unmute ASMR Audio -->
+          <button id="btn-audio" onclick="toggleAudio()" title="Toggle ASMR Sound"
+            class="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 transition active:scale-95">
+            <svg id="icon-sound-on" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+            </svg>
+            <svg id="icon-sound-off" class="w-4 h-4 hidden text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+            </svg>
           </button>
+
+          <!-- Mobile Stats Drawer Trigger -->
+          <button onclick="openDrawer('panel-stats')" title="Stats & History"
+            class="min-[960px]:hidden p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 transition active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </button>
+
+          <!-- Settings / Themes Trigger -->
+          <button onclick="openSettings()" title="Settings, HUD & Themes"
+            class="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-200 transition active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Matchup Header: Left Count VS Right Count + Growth Rules -->
+      <section class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 pt-2 pb-1 z-10 shrink-0">
+        <div class="flex flex-col items-center text-center min-w-0">
+          <span id="left-count-display" class="font-mono-num text-3xl sm:text-4xl font-black tracking-tight leading-none"
+            style="color: var(--left-color); text-shadow: 0 0 22px var(--left-glow);">2</span>
+          <div id="left-rule-display" class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mt-1 truncate max-w-full px-1"
+            style="color: var(--left-color);">×2 EVERY 5 SECONDS</div>
+        </div>
+
+        <div class="flex flex-col items-center justify-center px-1.5">
+          <span class="text-sm sm:text-base font-black tracking-widest text-white/90">VS</span>
+          <span id="race-timer" class="font-mono-num text-[11px] font-bold text-slate-400 mt-0.5">0.0s</span>
+        </div>
+
+        <div class="flex flex-col items-center text-center min-w-0">
+          <span id="right-count-display" class="font-mono-num text-3xl sm:text-4xl font-black tracking-tight leading-none"
+            style="color: var(--right-color); text-shadow: 0 0 22px var(--right-glow);">400</span>
+          <div id="right-rule-display" class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mt-1 truncate max-w-full px-1"
+            style="color: var(--right-color);">+100 EVERY 1 FLOOR</div>
+        </div>
+      </section>
+
+      <!-- Active Prediction / Mode Pill Badge -->
+      <div id="user-pick-banner" class="hidden items-center justify-center gap-2 py-1 z-10 shrink-0">
+        <span id="user-pick-badge" class="text-[11px] font-extrabold uppercase tracking-wider px-3 py-0.5 rounded-full border">
+          YOUR PICK: LEFT
+        </span>
+      </div>
+
+      <!-- Main Physics Canvas Container (Full Level Always Visible) -->
+      <div id="canvas-wrapper" class="relative flex-1 w-full min-h-0 my-1 rounded-2xl overflow-hidden" style="background-color: var(--bg-panel);">
+        <canvas id="sim-canvas" class="block w-full h-full"></canvas>
+
+        <!-- Optional Pro HUD Overlay (Resets immediately to 0 on race load/restart) -->
+        <div id="pro-hud-overlay" class="hidden pointer-events-none absolute inset-x-2 top-2 flex justify-between text-[10px] font-mono-num z-10">
+          <div class="bg-black/65 backdrop-blur-md border border-white/10 rounded-xl px-2.5 py-1.5 space-y-0.5">
+            <div class="text-slate-400">DPS: <span id="hud-left-dps" class="text-white font-bold">0</span></div>
+            <div class="text-slate-400">DMG: <span id="hud-left-dmg" class="text-white font-bold">0</span></div>
+          </div>
+          <div class="bg-black/65 backdrop-blur-md border border-white/10 rounded-xl px-2.5 py-1.5 space-y-0.5 text-right">
+            <div class="text-slate-400">DPS: <span id="hud-right-dps" class="text-white font-bold">0</span></div>
+            <div class="text-slate-400">DMG: <span id="hud-right-dmg" class="text-white font-bold">0</span></div>
+          </div>
+        </div>
+
+        <!-- Victory / Outcome Modal Overlay inside Arena -->
+        <div id="result-overlay" class="hidden absolute inset-0 z-30 bg-black/75 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center">
+          <div id="result-prediction-pill" class="text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full mb-3 border">
+            PREDICTION CORRECT!
+          </div>
+          <h2 id="result-winner-title" class="text-3xl sm:text-4xl font-black tracking-tight uppercase mb-1" style="color: var(--left-color);">
+            LEFT WINS!
+          </h2>
+          <p id="result-subtitle" class="text-xs sm:text-sm text-slate-300 font-medium mb-5">
+            Broke all 10 floors in 24.8s
+          </p>
+
+          <div class="grid grid-cols-2 gap-2.5 w-full max-w-xs mb-5">
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400">Final Balls</div>
+              <div id="result-final-balls" class="font-mono-num text-sm font-extrabold text-white mt-0.5">512 vs 1,400</div>
+            </div>
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5">
+              <div class="text-[10px] uppercase tracking-wider text-slate-400">Race Seed</div>
+              <div id="result-seed-code" class="font-mono-num text-sm font-extrabold text-white mt-0.5">BR-8F4A-99C2</div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2 w-full max-w-xs">
+            <button id="btn-result-next" onclick="generateRandomRace()"
+              class="w-full py-3 rounded-2xl bg-white text-slate-950 font-black text-sm tracking-wide hover:bg-slate-200 transition active:scale-[0.98] shadow-lg">
+              NEXT RANDOM RACE →
+            </button>
+            <button id="btn-result-edit-custom" onclick="editLastCustomSetup()"
+              class="hidden w-full py-2.5 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 font-extrabold text-xs tracking-wide uppercase transition active:scale-[0.98]">
+              🛠️ Edit Custom Setup
+            </button>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="replayCurrentSeed()"
+                class="py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition active:scale-95">
+                ↻ Replay Seed
+              </button>
+              <button onclick="shareCurrentSeed()"
+                class="py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition active:scale-95">
+                Share Hash
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- State B: Race In Progress Controls -->
-      <div id="controls-running" class="hidden grid-cols-3 gap-2">
-        <button onclick="replayCurrentSeed()"
-          class="py-2.5 px-3 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95">
-          ↻ Restart
-        </button>
-        <button onclick="generateRandomRace()"
-          class="py-2.5 px-3 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95">
-          🎲 New Race
-        </button>
-        <button onclick="shareCurrentSeed()"
-          class="py-2.5 px-3 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95">
-          🔗 Share
-        </button>
-      </div>
-    </footer>
+      <!-- Bottom Interaction Bar -->
+      <footer class="pt-1.5 z-20 shrink-0">
+        <!-- State A: Pre-Race Prediction Prompt (Standard / First Daily Guess) -->
+        <div id="controls-predict" class="flex flex-col gap-2">
+          <div class="flex items-center justify-between px-1">
+            <span id="predict-prompt-label" class="text-[11px] font-extrabold uppercase tracking-widest text-slate-300">Inspect floors & pick winner:</span>
+            <button id="btn-just-watch" onclick="startRace('NONE')" class="text-[11px] font-semibold text-slate-400 hover:text-white underline underline-offset-2">
+              Just Watch
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button onclick="startRace('LEFT')"
+              class="animate-pick-pulse py-3 px-3 rounded-2xl font-black text-sm tracking-wider uppercase text-slate-950 transition active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+              style="background-color: var(--left-color); box-shadow: 0 6px 24px var(--left-glow);">
+              <span>◀ PICK LEFT</span>
+            </button>
+            <button onclick="startRace('RIGHT')"
+              class="animate-pick-pulse py-3 px-3 rounded-2xl font-black text-sm tracking-wider uppercase text-slate-950 transition active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+              style="background-color: var(--right-color); box-shadow: 0 6px 24px var(--right-glow);">
+              <span>PICK RIGHT ▶</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- State A2: Daily Challenge Already Played Today -> Watch-Only Lock -->
+        <div id="controls-daily-locked" class="hidden flex-col gap-2">
+          <div class="flex items-center justify-between px-1">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-indigo-300">Daily guess already used today</span>
+            <span id="daily-locked-prev-pick" class="font-mono-num text-[11px] text-slate-400">Your guess: LEFT</span>
+          </div>
+          <button onclick="startRace('NONE')"
+            class="w-full py-3 px-4 rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-black text-sm tracking-wider uppercase transition active:scale-95 shadow-lg">
+            ▶ Watch Daily Replay
+          </button>
+        </div>
+
+        <!-- State B: Race In Progress Controls -->
+        <div id="controls-running" class="hidden grid-cols-3 gap-2">
+          <button onclick="replayCurrentSeed()"
+            class="py-2.5 px-3 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95">
+            ↻ Restart
+          </button>
+          <button onclick="generateRandomRace()"
+            class="py-2.5 px-3 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95">
+            🎲 New Race
+          </button>
+          <button onclick="shareCurrentSeed()"
+            class="py-2.5 px-3 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 text-xs font-bold text-slate-200 transition active:scale-95">
+            🔗 Share
+          </button>
+        </div>
+      </footer>
+    </section>
   </main>
 
 
   <!-- =====================================================================
-       RIGHT SIDEBAR (Desktop Persistent Panel / Mobile Slide-Up Sheet)
-       Themes, Pro HUD Toggle, Seed Import & Custom Race Builder
+       RIGHT SIDEBAR (Desktop >= 960px Persistent Panel / Mobile Slide-Up Sheet)
+       Settings, Themes, Pro HUD Toggle & Quick Seed Import/Share
   ====================================================================== -->
   <aside id="panel-controls"
-    class="drawer-sheet fixed inset-x-0 bottom-0 z-40 max-h-[85dvh] rounded-t-3xl bg-[#14161D]/95 backdrop-blur-xl border-t border-white/10 p-5 flex flex-col gap-4 overflow-y-auto translate-y-full opacity-0 pointer-events-none
-           lg:static lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto lg:w-80 xl:w-96 lg:h-[94dvh] lg:max-h-[94dvh] lg:rounded-3xl lg:border lg:border-white/10 lg:ml-5 lg:shadow-2xl">
+    class="drawer-sheet fixed inset-x-0 bottom-0 z-40 max-h-[85dvh] rounded-t-3xl bg-[#14161D]/95 backdrop-blur-xl border-t border-white/10 p-5 flex flex-col gap-3.5 overflow-y-auto translate-y-full opacity-0 pointer-events-none
+           min-[960px]:static min-[960px]:translate-y-0 min-[960px]:opacity-100 min-[960px]:pointer-events-auto min-[960px]:w-80 xl:w-96 min-[960px]:h-[94dvh] min-[960px]:max-h-[94dvh] min-[960px]:rounded-3xl min-[960px]:border min-[960px]:border-white/10 min-[960px]:ml-5 min-[960px]:shadow-2xl">
 
     <!-- Mobile Drawer Handle -->
-    <div class="flex items-center justify-between lg:hidden shrink-0">
+    <div class="flex items-center justify-between min-[960px]:hidden shrink-0">
       <div class="w-10 h-1.5 rounded-full bg-white/20 mx-auto"></div>
     </div>
 
@@ -390,11 +704,11 @@
           </svg>
         </div>
         <div>
-          <h2 class="text-sm font-extrabold tracking-wide uppercase text-white">Lab & Themes</h2>
-          <p class="text-[11px] text-slate-400">HUD, palettes & seed sharing</p>
+          <h2 class="text-sm font-extrabold tracking-wide uppercase text-white">Settings & Themes</h2>
+          <p class="text-[11px] text-slate-400">HUD telemetry, palettes & seeds</p>
         </div>
       </div>
-      <button onclick="closeDrawers()" class="lg:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300">
+      <button onclick="closeDrawers()" class="min-[960px]:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
@@ -406,16 +720,28 @@
         <div class="text-[11px] text-slate-400">Live DPS, total damage & center race bar</div>
       </div>
       <button id="toggle-pro-hud" onclick="toggleProHud()" role="switch" aria-checked="false"
-        class="w-12 h-6 rounded-full bg-white/10 p-1 transition-colors duration-200 flex items-center">
+        class="w-12 h-6 rounded-full bg-white/10 p-1 transition-colors duration-200 flex items-center shrink-0">
         <span id="toggle-pro-hud-knob" class="w-4 h-4 rounded-full bg-slate-400 transition-transform duration-200"></span>
       </button>
     </div>
 
-    <!-- 2. Theme Palettes & Custom Color Pickers -->
+    <!-- 2. ASMR Sound Toggle inside Settings -->
+    <div class="bg-[#1B1E28] rounded-2xl p-3.5 border border-white/5 flex items-center justify-between shrink-0">
+      <div>
+        <div class="text-xs font-extrabold text-white">Procedural ASMR Audio</div>
+        <div class="text-[11px] text-slate-400">Pentatonic marimba hits & shatter chimes</div>
+      </div>
+      <button id="toggle-settings-audio" onclick="toggleAudio()" role="switch" aria-checked="true"
+        class="w-12 h-6 rounded-full bg-emerald-500 p-1 transition-colors duration-200 flex items-center shrink-0">
+        <span id="toggle-settings-audio-knob" class="w-4 h-4 rounded-full bg-slate-950 translate-x-6 transition-transform duration-200"></span>
+      </button>
+    </div>
+
+    <!-- 3. Theme Palettes & Custom Color Pickers -->
     <div class="bg-[#1B1E28] rounded-2xl p-3.5 border border-white/5 space-y-3 shrink-0">
       <div class="flex items-center justify-between">
         <span class="text-xs font-extrabold uppercase tracking-wider text-slate-300">Color Themes</span>
-        <span id="active-theme-name" class="text-[11px] font-semibold text-slate-400">Neon Classic</span>
+        <span id="active-theme-name" class="text-[11px] font-semibold text-slate-400">Cyan & Amber</span>
       </div>
 
       <!-- Preset Swatches -->
@@ -423,28 +749,28 @@
 
       <!-- Custom Theme Color Pickers (Left, Right, Background & Surface) -->
       <div class="pt-2 border-t border-white/5 grid grid-cols-2 gap-2.5">
-        <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5">
+        <div class="flex items-center gap-2 bg-black/25 p-1.5 rounded-xl border border-white/5">
           <input type="color" id="custom-left-color" value="#00E5FF" onchange="applyCustomTheme()" title="Left Side Color">
           <div>
             <div class="text-[11px] font-bold text-white">Left</div>
             <div id="custom-left-hex" class="font-mono-num text-[10px] text-slate-400">#00E5FF</div>
           </div>
         </div>
-        <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5">
+        <div class="flex items-center gap-2 bg-black/25 p-1.5 rounded-xl border border-white/5">
           <input type="color" id="custom-right-color" value="#FF9100" onchange="applyCustomTheme()" title="Right Side Color">
           <div>
             <div class="text-[11px] font-bold text-white">Right</div>
             <div id="custom-right-hex" class="font-mono-num text-[10px] text-slate-400">#FF9100</div>
           </div>
         </div>
-        <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5">
+        <div class="flex items-center gap-2 bg-black/25 p-1.5 rounded-xl border border-white/5">
           <input type="color" id="custom-bg-color" value="#0D0E12" onchange="applyCustomTheme()" title="App Background Color">
           <div>
             <div class="text-[11px] font-bold text-white">Backdrop</div>
             <div id="custom-bg-hex" class="font-mono-num text-[10px] text-slate-400">#0D0E12</div>
           </div>
         </div>
-        <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5">
+        <div class="flex items-center gap-2 bg-black/25 p-1.5 rounded-xl border border-white/5">
           <input type="color" id="custom-panel-color" value="#14161D" onchange="applyCustomTheme()" title="Arena Surface Color">
           <div>
             <div class="text-[11px] font-bold text-white">Surface</div>
@@ -454,7 +780,7 @@
       </div>
     </div>
 
-    <!-- 3. Import & Share Seed Hash -->
+    <!-- 4. Import & Share Seed Hash -->
     <div class="bg-[#1B1E28] rounded-2xl p-3.5 border border-white/5 space-y-2.5 shrink-0">
       <div class="text-xs font-extrabold uppercase tracking-wider text-slate-300">Import / Share Race Hash</div>
       <div class="flex gap-2">
@@ -477,74 +803,14 @@
       </div>
     </div>
 
-    <!-- 4. Custom Matchup Builder (Generates deterministic custom seed) -->
-    <div class="bg-[#1B1E28] rounded-2xl p-3.5 border border-white/5 space-y-3 shrink-0">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-300">Custom Race Builder</span>
-        <span class="text-[10px] px-2 py-0.5 rounded bg-white/10 text-slate-300 font-semibold">Shareable</span>
-      </div>
+    <!-- 5. Shortcut to Custom Race Lab -->
+    <button onclick="closeDrawers(); showView('view-custom');"
+      class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-400/30 text-xs font-extrabold text-cyan-200 flex items-center justify-between transition shrink-0">
+      <span>🛠️ Open Custom Race Lab</span>
+      <span>→</span>
+    </button>
 
-      <div class="grid grid-cols-2 gap-2.5 text-xs">
-        <!-- Left Rule Config -->
-        <div class="space-y-1.5 bg-black/25 p-2.5 rounded-xl border border-white/5">
-          <div class="font-extrabold text-[11px]" style="color: var(--left-color);">LEFT SIDE</div>
-          <label class="block text-[10px] text-slate-400">Start Balls</label>
-          <input id="custom-l-start" type="number" min="1" max="5000" value="2"
-            class="w-full bg-black/50 border border-white/10 rounded-lg px-2 py-1 font-mono-num text-xs text-white">
-          <label class="block text-[10px] text-slate-400">Growth Rule</label>
-          <select id="custom-l-rule" class="w-full bg-black/50 border border-white/10 rounded-lg px-1.5 py-1 text-[11px] text-white">
-            <option value="0">×2 every 5s</option>
-            <option value="1">×2 every 4s</option>
-            <option value="2">×3 every 7s</option>
-            <option value="3">+25 every 2s</option>
-            <option value="4">+50 every 3s</option>
-            <option value="5">+100 every floor</option>
-            <option value="6">+150 every floor</option>
-            <option value="7">×1.5 every floor</option>
-            <option value="8">+1 every 40 bounces</option>
-            <option value="9">No Growth (Static)</option>
-          </select>
-        </div>
-
-        <!-- Right Rule Config -->
-        <div class="space-y-1.5 bg-black/25 p-2.5 rounded-xl border border-white/5">
-          <div class="font-extrabold text-[11px]" style="color: var(--right-color);">RIGHT SIDE</div>
-          <label class="block text-[10px] text-slate-400">Start Balls</label>
-          <input id="custom-r-start" type="number" min="1" max="5000" value="400"
-            class="w-full bg-black/50 border border-white/10 rounded-lg px-2 py-1 font-mono-num text-xs text-white">
-          <label class="block text-[10px] text-slate-400">Growth Rule</label>
-          <select id="custom-r-rule" class="w-full bg-black/50 border border-white/10 rounded-lg px-1.5 py-1 text-[11px] text-white">
-            <option value="5" selected>+100 every floor</option>
-            <option value="0">×2 every 5s</option>
-            <option value="1">×2 every 4s</option>
-            <option value="2">×3 every 7s</option>
-            <option value="3">+25 every 2s</option>
-            <option value="4">+50 every 3s</option>
-            <option value="6">+150 every floor</option>
-            <option value="7">×1.5 every floor</option>
-            <option value="8">+1 every 40 bounces</option>
-            <option value="9">No Growth (Static)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <label class="text-[11px] text-slate-400">Floors:</label>
-          <select id="custom-floors" class="bg-black/50 border border-white/10 rounded-lg px-2 py-1 font-mono-num text-xs text-white">
-            <option value="8">8</option>
-            <option value="10" selected>10</option>
-            <option value="12">12</option>
-          </select>
-        </div>
-        <button onclick="buildCustomRace()"
-          class="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-black text-xs tracking-wide transition active:scale-95">
-          Generate Custom Race
-        </button>
-      </div>
-    </div>
-
-    <!-- PWA Install Prompt Banner (Shown when installable) -->
+    <!-- PWA Install Prompt Banner -->
     <div id="pwa-install-box" class="hidden bg-emerald-500/10 border border-emerald-400/30 rounded-2xl p-3 flex items-center justify-between shrink-0">
       <div>
         <div class="text-xs font-extrabold text-emerald-300">Install Bounce Race</div>
@@ -557,16 +823,17 @@
   </aside>
 
   <!-- Backdrop for Mobile Drawers -->
-  <div id="drawer-backdrop" onclick="closeDrawers()" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-xs hidden lg:hidden"></div>
+  <div id="drawer-backdrop" onclick="closeDrawers()" class="fixed inset-0 z-30 bg-black/60 backdrop-blur-xs hidden min-[960px]:hidden"></div>
 
 
   <!-- =====================================================================
        APPLICATION JAVASCRIPT:
        1. PWA Manifest & Service Worker Setup
-       2. Deterministic PRNG & Seed Codec (Standard + Custom Seeds)
-       3. Procedural Web Audio ASMR Synthesizer
-       4. Fixed-Timestep 60Hz Deterministic 2D Gravity Physics & Super-Balls
-       5. Canvas Renderer, Themes, Stats & Adaptive UI Controller
+       2. Deterministic PRNG & Seed Codec (Standard + Full Custom BRC Hash)
+       3. Diverse Archetype Matchup Generator & Analytical Balancer
+       4. Procedural Web Audio ASMR Synthesizer
+       5. Fixed-Timestep 60Hz Deterministic 2D Gravity Physics & Super-Balls
+       6. Canvas Renderer, Multi-Screen Router, Separate Daily Stats & HUD
   ====================================================================== -->
   <script>
     /* =========================================================================
@@ -609,7 +876,7 @@
 
         if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
           const swCode = `
-            const CACHE = 'bounce-race-v1';
+            const CACHE = 'bounce-race-v2';
             self.addEventListener('install', e => { self.skipWaiting(); });
             self.addEventListener('activate', e => { e.waitUntil(clients.claim()); });
             self.addEventListener('fetch', e => {
@@ -626,9 +893,7 @@
           const swBlob = new Blob([swCode], { type: 'application/javascript' });
           navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
         }
-      } catch (e) {
-        // Ignore if sandbox restricts blobs
-      }
+      } catch (e) {}
     })();
 
     let deferredInstallPrompt = null;
@@ -650,7 +915,15 @@
 
 
     /* =========================================================================
-       2. DETERMINISTIC PRNG (MULBERRY32) & SHAREABLE SEED CODEC
+       2. DETERMINISTIC PRNG (MULBERRY32) & UNIFIED RULE MODEL
+       Every rule follows the clean parameterized schema:
+       {
+         op: 'ADD' | 'MULT',
+         val: number,          // X (e.g., 2, 1.5, 35, 100)
+         interval: number,     // Y (e.g., 1, 5, 35)
+         unit: 'SEC' | 'BNC' | 'FLR',
+         label: string
+       }
     ========================================================================= */
     function mulberry32(seed) {
       let a = seed >>> 0;
@@ -677,68 +950,102 @@
       return `BR-${hex.slice(0, 4)}-${hex.slice(4, 8)}`;
     }
 
-    // Rule definitions catalog (Indexed 0..9 for compact custom seed encoding)
-    const RULE_CATALOG = [
-      { id: 0, type: 'TIME_MULT', mult: 2, interval: 5, label: '×2 EVERY 5 SECONDS' },
-      { id: 1, type: 'TIME_MULT', mult: 2, interval: 4, label: '×2 EVERY 4 SECONDS' },
-      { id: 2, type: 'TIME_MULT', mult: 3, interval: 7, label: '×3 EVERY 7 SECONDS' },
-      { id: 3, type: 'TIME_ADD', add: 25, interval: 2, label: '+25 EVERY 2 SECONDS' },
-      { id: 4, type: 'TIME_ADD', add: 50, interval: 3, label: '+50 EVERY 3 SECONDS' },
-      { id: 5, type: 'FLOOR_ADD', add: 100, label: '+100 EVERY FLOOR' },
-      { id: 6, type: 'FLOOR_ADD', add: 150, label: '+150 EVERY FLOOR' },
-      { id: 7, type: 'FLOOR_MULT', mult: 1.5, label: '×1.5 EVERY FLOOR' },
-      { id: 8, type: 'BOUNCE_ADD', add: 1, every: 35, label: '+1 EVERY 35 BOUNCES' },
-      { id: 9, type: 'STATIC', label: 'NO GROWTH (STATIC)' }
-    ];
+    function formatRuleLabel(rule) {
+      if (rule.op === 'ADD' && rule.val === 0) return 'NO GROWTH (STATIC)';
+      const prefix = rule.op === 'MULT' ? `×${rule.val}` : `+${rule.val}`;
+      const unitWord =
+        rule.unit === 'SEC' ? (rule.interval === 1 ? 'SECOND' : 'SECONDS') :
+        rule.unit === 'BNC' ? (rule.interval === 1 ? 'BOUNCE' : 'BOUNCES') :
+        (rule.interval === 1 ? 'FLOOR' : 'FLOORS');
+      return `${prefix} EVERY ${rule.interval} ${unitWord}`;
+    }
+
+    function makeRule(op, val, interval, unit) {
+      const r = { op, val, interval, unit, label: '' };
+      r.label = formatRuleLabel(r);
+      return r;
+    }
 
     /**
-     * Fast analytical estimator (in simulated seconds) to predict how long a side
-     * will take to clear a given floor HP array. Used by the procedural generator
-     * to calibrate starting counts so races are close & exciting (never 5x blowouts),
-     * while preserving genuine strategic deduction!
+     * Generates a floor HP array of `count` floors whose sum equals `totalHits`
+     * along the chosen curve ('ESC' = Escalating, 'FLAT' = Even, 'BOSS' = Boss Finale).
+     */
+    function buildFloorsFromTotalHits(count, totalHits, curve = 'ESC') {
+      const safeCount = Math.max(4, Math.min(15, count));
+      const safeTotal = Math.max(safeCount * 100, Math.round(totalHits));
+
+      const weights = [];
+      for (let i = 0; i < safeCount; i++) {
+        const t = (i + 1) / safeCount;
+        if (curve === 'FLAT') {
+          weights.push(1);
+        } else if (curve === 'BOSS') {
+          weights.push(i === safeCount - 1 ? safeCount * 1.4 : 0.6 + t * 0.8);
+        } else {
+          // Escalating curve
+          weights.push(0.35 + Math.pow(t, 1.65) * 2.4);
+        }
+      }
+
+      const weightSum = weights.reduce((a, b) => a + b, 0);
+      const floors = weights.map((w) => Math.max(50, Math.round((w / weightSum) * safeTotal)));
+
+      // Adjust the final floor by any rounding delta so the sum matches `safeTotal`
+      const currentSum = floors.reduce((a, b) => a + b, 0);
+      floors[floors.length - 1] = Math.max(50, floors[floors.length - 1] + (safeTotal - currentSum));
+      return floors;
+    }
+
+    /**
+     * Fast analytical time-to-clear estimator (in seconds) for matchmaking calibration.
      */
     function estimateClearSeconds(startCount, rule, floorsHP) {
       let balls = startCount;
       let floorIdx = 0;
       let floorHp = floorsHP[0];
       let time = 0;
-      let timer = 0;
+      let secTimer = 0;
       let bounceAccum = 0;
-      const dt = 0.25; // Coarse 4Hz analytical step
-      // Average ~1.85 floor hits per ball per second with high-rebound physics
-      const hitsPerBallSec = 1.85;
+      let floorsBrokenCount = 0;
+      const dt = 0.2;
+      // Average ~2.2 total bounces (floor + wall) per ball per sec, ~1.45 floor hits/sec
+      const floorHitsPerBallSec = 1.45;
+      const totalBouncesPerBallSec = 2.25;
 
       while (floorIdx < floorsHP.length && time < 180) {
         time += dt;
 
-        // Apply timed rules
-        if (rule.type === 'TIME_MULT' || rule.type === 'TIME_ADD') {
-          timer += dt;
-          if (timer >= rule.interval) {
-            timer -= rule.interval;
-            balls = rule.type === 'TIME_MULT'
-              ? Math.min(250000, balls * rule.mult)
-              : Math.min(250000, balls + rule.add);
+        if (rule.unit === 'SEC') {
+          secTimer += dt;
+          if (secTimer >= rule.interval) {
+            secTimer -= rule.interval;
+            balls = rule.op === 'MULT'
+              ? Math.min(250000, balls * rule.val)
+              : Math.min(250000, balls + rule.val);
           }
         }
 
-        const hitsThisStep = balls * hitsPerBallSec * dt;
+        const hitsThisStep = balls * floorHitsPerBallSec * dt;
         floorHp -= hitsThisStep;
 
-        if (rule.type === 'BOUNCE_ADD') {
-          bounceAccum += hitsThisStep;
-          const added = Math.floor(bounceAccum / rule.every) * rule.add;
-          if (added > 0) {
-            bounceAccum %= rule.every;
-            balls += added;
+        if (rule.unit === 'BNC') {
+          bounceAccum += balls * totalBouncesPerBallSec * dt;
+          while (bounceAccum >= rule.interval) {
+            bounceAccum -= rule.interval;
+            balls = rule.op === 'MULT'
+              ? Math.min(250000, Math.round(balls * rule.val))
+              : Math.min(250000, balls + rule.val);
           }
         }
 
         while (floorHp <= 0 && floorIdx < floorsHP.length) {
           floorIdx++;
-          if (rule.type === 'FLOOR_ADD') balls += rule.add;
-          else if (rule.type === 'FLOOR_MULT') balls = Math.round(balls * rule.mult);
-
+          floorsBrokenCount++;
+          if (rule.unit === 'FLR' && floorsBrokenCount % rule.interval === 0) {
+            balls = rule.op === 'MULT'
+              ? Math.min(250000, Math.round(balls * rule.val))
+              : Math.min(250000, balls + rule.val);
+          }
           if (floorIdx < floorsHP.length) {
             floorHp += floorsHP[floorIdx];
           }
@@ -748,37 +1055,104 @@
     }
 
     /**
-     * Generates a complete deterministic race specification from either:
+     * Diverse Matchup Archetypes (Includes Linear-vs-Linear, Bounce-vs-Floor,
+     * Time-Linear-vs-Floor-Linear, Exponential-vs-Bounce, etc. — never just ×N vs +N!)
+     */
+    const MATCHUP_ARCHETYPES = [
+      // 1. Linear Floor Burst vs Linear Bounce Grinder
+      {
+        name: 'Floor Burst vs Bounce Grinder',
+        a: { starts: [60, 90, 120], rules: [makeRule('ADD', 90, 1, 'FLR'), makeRule('ADD', 120, 1, 'FLR')] },
+        b: { starts: [25, 40, 55], rules: [makeRule('ADD', 1, 35, 'BNC'), makeRule('ADD', 2, 50, 'BNC')] }
+      },
+      // 2. Linear Time Stream vs Linear Floor Snowball
+      {
+        name: 'Time Drip vs Floor Snowball',
+        a: { starts: [15, 25, 35], rules: [makeRule('ADD', 25, 1, 'SEC'), makeRule('ADD', 45, 2, 'SEC')] },
+        b: { starts: [80, 110, 140], rules: [makeRule('ADD', 100, 1, 'FLR'), makeRule('ADD', 160, 2, 'FLR')] }
+      },
+      // 3. Linear Bounce Engine vs Linear Time Stream
+      {
+        name: 'Bounce Engine vs Time Stream',
+        a: { starts: [35, 50, 70], rules: [makeRule('ADD', 1, 30, 'BNC'), makeRule('ADD', 3, 75, 'BNC')] },
+        b: { starts: [10, 20, 30], rules: [makeRule('ADD', 20, 1, 'SEC'), makeRule('ADD', 60, 3, 'SEC')] }
+      },
+      // 4. Massive Static Swarm vs Linear Bounce Builder
+      {
+        name: 'Static Army vs Bounce Builder',
+        a: { starts: [380, 480, 600], rules: [makeRule('ADD', 0, 1, 'FLR')] },
+        b: { starts: [30, 45, 60], rules: [makeRule('ADD', 1, 25, 'BNC'), makeRule('ADD', 2, 40, 'BNC')] }
+      },
+      // 5. Floor Multiplier vs Linear Time Stream
+      {
+        name: 'Floor Multiplier vs Time Stream',
+        a: { starts: [18, 28, 40], rules: [makeRule('MULT', 1.5, 1, 'FLR'), makeRule('MULT', 2, 2, 'FLR')] },
+        b: { starts: [20, 35, 50], rules: [makeRule('ADD', 35, 1, 'SEC'), makeRule('ADD', 75, 2, 'SEC')] }
+      },
+      // 6. Classic Exponential Time vs Floor Burst
+      {
+        name: 'Exponential Surge vs Floor Burst',
+        a: { starts: [2, 3, 4], rules: [makeRule('MULT', 2, 5, 'SEC'), makeRule('MULT', 2, 4, 'SEC')] },
+        b: { starts: [180, 250, 320], rules: [makeRule('ADD', 100, 1, 'FLR'), makeRule('ADD', 140, 1, 'FLR')] }
+      },
+      // 7. Exponential Time vs Bounce Milestone Multiplier
+      {
+        name: 'Time Doubler vs Bounce Doubler',
+        a: { starts: [2, 3], rules: [makeRule('MULT', 2, 5, 'SEC')] },
+        b: { starts: [4, 6, 8], rules: [makeRule('MULT', 2, 450, 'BNC'), makeRule('MULT', 1.5, 250, 'BNC')] }
+      }
+    ];
+
+    /**
+     * Decodes a race specification from either:
      * - Standard Hash: BR-XXXX-XXXX
-     * - Custom Hash:   BRC-<base36 encoded parameters>
+     * - Custom Hash:   BRC-<lStart>-<lOp>-<lVal>-<lInt>-<lUnit>-<rStart>-<rOp>-<rVal>-<rInt>-<rUnit>-<floors>-<totalHits>-<curve>-<salt>
      */
     function decodeRaceFromHash(rawInput) {
       const clean = (rawInput || '').trim().toUpperCase();
 
-      // Custom Race Hash format: BRC-<lStart>-<lRule>-<rStart>-<rRule>-<floors>-<salt>
       if (clean.startsWith('BRC-')) {
-        const parts = clean.slice(4).split('-');
-        if (parts.length >= 5) {
-          const lStart = Math.max(1, Math.min(9999, parseInt(parts[0], 36) || 2));
-          const lRuleIdx = Math.max(0, Math.min(RULE_CATALOG.length - 1, parseInt(parts[1], 36) || 0));
-          const rStart = Math.max(1, Math.min(9999, parseInt(parts[2], 36) || 400));
-          const rRuleIdx = Math.max(0, Math.min(RULE_CATALOG.length - 1, parseInt(parts[3], 36) || 5));
-          const floorCount = Math.max(6, Math.min(14, parseInt(parts[4], 36) || 10));
-          const salt = parts[5] ? parseInt(parts[5], 36) : stringToSeed32(clean);
-          const rng = mulberry32(salt);
+        const p = clean.slice(4).split('-');
+        if (p.length >= 13) {
+          const lStart = Math.max(1, Math.min(9999, parseInt(p[0], 36) || 2));
+          const lOp = p[1] === 'M' ? 'MULT' : 'ADD';
+          const lVal = Math.max(0, (parseInt(p[2], 36) || 20) / 10);
+          const lInt = Math.max(1, parseInt(p[3], 36) || 5);
+          const lUnit = ['SEC', 'BNC', 'FLR'].includes(p[4]) ? p[4] : 'SEC';
 
-          const floors = generateFloorHPs(rng, floorCount, Math.max(lStart, rStart));
+          const rStart = Math.max(1, Math.min(9999, parseInt(p[5], 36) || 350));
+          const rOp = p[6] === 'M' ? 'MULT' : 'ADD';
+          const rVal = Math.max(0, (parseInt(p[7], 36) || 1000) / 10);
+          const rInt = Math.max(1, parseInt(p[8], 36) || 1);
+          const rUnit = ['SEC', 'BNC', 'FLR'].includes(p[9]) ? p[9] : 'FLR';
+
+          const floorCount = Math.max(4, Math.min(15, parseInt(p[10], 36) || 10));
+          const totalHits = Math.max(1000, Math.min(2000000, parseInt(p[11], 36) || 45000));
+          const curve = ['ESC', 'FLAT', 'BOSS'].includes(p[12]) ? p[12] : 'ESC';
+          const salt = p[13] ? parseInt(p[13], 36) : stringToSeed32(clean);
+
+          const lRule = makeRule(lOp, lVal, lInt, lUnit);
+          const rRule = makeRule(rOp, rVal, rInt, rUnit);
+          const floors = buildFloorsFromTotalHits(floorCount, totalHits, curve);
           return {
             hash: clean,
             seed32: salt,
-            left: { startCount: lStart, rule: RULE_CATALOG[lRuleIdx] },
-            right: { startCount: rStart, rule: RULE_CATALOG[rRuleIdx] },
+            isCustom: true,
+            customConfig: {
+              lStart, lRule,
+              rStart, rRule,
+              floors: floorCount,
+              totalHits,
+              curve
+            },
+            left: { startCount: lStart, rule: lRule },
+            right: { startCount: rStart, rule: rRule },
             floors
           };
         }
       }
 
-      // Standard Hash: BR-XXXX-XXXX (or arbitrary text hashed to 32-bit seed)
+      // Standard Hash: BR-XXXX-XXXX
       let seed32;
       const stdMatch = clean.match(/^BR-([0-9A-F]{4})-([0-9A-F]{4})$/);
       if (stdMatch) {
@@ -792,100 +1166,58 @@
       const hash = formatStandardHash(seed32);
       const rng = mulberry32(seed32);
 
-      // Competitive asymmetric archetypes (Exponential surge vs Crowd/Floor-snowball)
-      const archetypes = [
-        { lStart: [1, 2, 3], lRules: [0, 1], rStart: [180, 260, 340], rRules: [5, 6] },
-        { lStart: [2, 3, 4], lRules: [1, 2], rStart: [220, 320, 420], rRules: [3, 4] },
-        { lStart: [12, 20, 30], lRules: [3, 4], rStart: [80, 130, 190], rRules: [7, 5] },
-        { lStart: [2, 4, 6], lRules: [0, 8], rStart: [450, 650, 850], rRules: [9, 8] },
-        { lStart: [280, 400, 550], lRules: [9, 5], rStart: [1, 2, 3], rRules: [0, 1, 2] }
-      ];
-
-      const arch = archetypes[Math.floor(rng() * archetypes.length)];
+      const arch = MATCHUP_ARCHETYPES[Math.floor(rng() * MATCHUP_ARCHETYPES.length)];
       const swapSides = rng() > 0.5;
       const pick = (arr) => arr[Math.floor(rng() * arr.length)];
 
-      let leftConfig = {
-        startCount: pick(arch.lStart),
-        rule: RULE_CATALOG[pick(arch.lRules)]
-      };
-      let rightConfig = {
-        startCount: pick(arch.rStart),
-        rule: RULE_CATALOG[pick(arch.rRules)]
-      };
+      let sideA = { startCount: pick(arch.a.starts), rule: pick(arch.a.rules) };
+      let sideB = { startCount: pick(arch.b.starts), rule: pick(arch.b.rules) };
 
-      const floorCount = 9 + Math.floor(rng() * 3); // 9 to 11 floors
-      const maxStart = Math.max(leftConfig.startCount, rightConfig.startCount);
-      let floors = generateFloorHPs(rng, floorCount, maxStart);
+      const floorCount = 9 + Math.floor(rng() * 3); // 9..11 floors
+      const baseTotalHits = Math.round((26000 + rng() * 24000) / 500) * 500;
+      let floors = buildFloorsFromTotalHits(floorCount, baseTotalHits, 'ESC');
 
-      // Calibrate the non-exponential (larger-start) side so estimated clear times
-      // land within a competitive ~12%-32% window (preventing whitewashes!)
-      const fastSide = leftConfig.startCount >= rightConfig.startCount ? leftConfig : rightConfig;
-      const surgeSide = fastSide === leftConfig ? rightConfig : leftConfig;
-
-      // Target a 26s - 42s dramatic race duration by scaling floor HPs if needed
-      const tSurge = estimateClearSeconds(surgeSide.startCount, surgeSide.rule, floors);
-      if (tSurge > 0) {
-        const desiredDuration = 28 + rng() * 12; // 28s to 40s
-        const hpScale = Math.max(0.55, Math.min(1.85, desiredDuration / tSurge));
-        floors = floors.map((hp, i) => {
-          const scaled = Math.round((hp * hpScale) / 5) * 5;
-          return Math.max(120 + i * 90, scaled);
-        });
+      // Calibrate target race duration to ~24s - 38s so it feels crisp and dramatic
+      const tA0 = estimateClearSeconds(sideA.startCount, sideA.rule, floors);
+      const tB0 = estimateClearSeconds(sideB.startCount, sideB.rule, floors);
+      const avgTime = (tA0 + tB0) / 2;
+      if (avgTime > 0) {
+        const targetDur = 25 + rng() * 11;
+        const scale = Math.max(0.55, Math.min(1.85, targetDur / avgTime));
+        const scaledTotal = Math.round((baseTotalHits * scale) / 500) * 500;
+        floors = buildFloorsFromTotalHits(floorCount, scaledTotal, 'ESC');
       }
 
-      // Binary-search tune `fastSide.startCount` so its estimated finish time is
-      // within 0.80x .. 1.24x of `surgeSide` (guaranteeing a close photo-finish race!)
-      const targetTime = estimateClearSeconds(surgeSide.startCount, surgeSide.rule, floors);
-      const desiredRatio = 0.82 + rng() * 0.40; // Sometimes Left edges out, sometimes Right
+      // Balance sideB's starting count so estimated finish times are within 0.82x..1.22x
+      // (ensuring close races without whitewashes, while keeping outcome 100% deducible)
+      const targetTime = estimateClearSeconds(sideA.startCount, sideA.rule, floors);
+      const desiredRatio = 0.82 + rng() * 0.40;
       const goalTime = targetTime * desiredRatio;
 
-      let low = 10;
-      let high = 2500;
-      let bestStart = fastSide.startCount;
+      let low = 1;
+      let high = 2000;
+      let bestStart = sideB.startCount;
       for (let iter = 0; iter < 14; iter++) {
         const mid = Math.round((low + high) / 2);
-        const tMid = estimateClearSeconds(mid, fastSide.rule, floors);
+        const tMid = estimateClearSeconds(mid, sideB.rule, floors);
         bestStart = mid;
-        // More starting balls = shorter clear time
-        if (tMid > goalTime) {
-          low = mid + 1;
-        } else {
-          high = mid - 1;
-        }
+        if (tMid > goalTime) low = mid + 1;
+        else high = mid - 1;
       }
-      // Round to a clean human-friendly number (nearest 5 or 10)
-      fastSide.startCount = Math.max(15, Math.round(bestStart / 5) * 5);
+      sideB.startCount = bestStart >= 20 ? Math.round(bestStart / 5) * 5 : Math.max(1, bestStart);
 
-      if (swapSides) {
-        [leftConfig, rightConfig] = [rightConfig, leftConfig];
-      }
+      const leftConfig = swapSides ? sideB : sideA;
+      const rightConfig = swapSides ? sideA : sideB;
 
       return {
         hash,
         seed32,
+        isCustom: false,
+        customConfig: null,
         left: leftConfig,
         right: rightConfig,
         floors
       };
-    }
-
-    function generateFloorHPs(rng, count, maxStart) {
-      const floors = [];
-      const baseScale = Math.max(160, Math.round(maxStart * 0.55));
-      for (let i = 0; i < count; i++) {
-        const progress = (i + 1) / count;
-        // Escalating curve with slight deterministic variance
-        const curve = Math.pow(progress, 1.85) * 14500 + baseScale * (i + 1) * 0.45;
-        const jitter = 0.92 + rng() * 0.16;
-        let hp = Math.round((curve * jitter) / 5) * 5;
-        hp = Math.max(120, hp);
-        if (i > 0 && hp <= floors[i - 1]) {
-          hp = floors[i - 1] + Math.round(180 + rng() * 250);
-        }
-        floors.push(hp);
-      }
-      return floors;
     }
 
 
@@ -897,7 +1229,6 @@
         this.ctx = null;
         this.muted = false;
         this.lastPluckTime = 0;
-        // Pentatonic frequencies for pleasant ASMR marimba plucks
         this.scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
       }
 
@@ -917,7 +1248,6 @@
         if (!this.ctx) return;
 
         const now = this.ctx.currentTime;
-        // Rate-limit plucks slightly so 500 simultaneous balls sound crisp, not distorted
         if (now - this.lastPluckTime < 0.024) return;
         this.lastPluckTime = now;
 
@@ -989,24 +1319,26 @@
 
     /* =========================================================================
        4. DETERMINISTIC FIXED-TIMESTEP 2D GRAVITY PHYSICS ENGINE
-       Normalized Virtual Coordinate Space per Shaft:
-       Width:  0 .. 100 units
-       Height: 0 .. 200 units
-       All physics math happens in this exact normalized space so screen size,
-       DPR, or refresh rate NEVER alters a single bounce or outcome!
     ========================================================================= */
     const SHAFT_W = 100;
     const SHAFT_H = 200;
-    const WALL_PAD = 0.6;    // Strict inner margin so balls never overlap borders/divider
-    const FIXED_DT = 1 / 60; // Strict 60Hz deterministic simulation tick
-    const GRAVITY = 155;     // Virtual units / sec^2
+    const WALL_PAD = 0.8;
+    const FIXED_DT = 1 / 60;
+    const GRAVITY = 162;
     const RESTITUTION = 0.985;
-    const MIN_FLOOR_REBOUND_VY = 102; // Guarantees lively high bounces, no bottom pooling
-    const MAX_ACTIVE_BODIES = 320;    // Super-Ball clustering threshold for locked 60 FPS
+    const MIN_FLOOR_REBOUND_VY = 106;
+    const MAX_ACCUMULATOR_SEC = 0.1;
+
+    function getDynamicVisualCap(totalLogicalBalls) {
+      if (totalLogicalBalls >= 20000) return 95;
+      if (totalLogicalBalls >= 5000) return 115;
+      if (totalLogicalBalls >= 1000) return 145;
+      return 190;
+    }
 
     class ShaftSimulation {
       constructor(sideId, config, floorsHP, seed32) {
-        this.sideId = sideId; // 'LEFT' or 'RIGHT'
+        this.sideId = sideId;
         this.config = config;
         this.rng = mulberry32(seed32 ^ (sideId === 'LEFT' ? 0xA5A5A5A5 : 0x5A5A5A5A));
 
@@ -1016,7 +1348,8 @@
           hp: hp,
           broken: false,
           flash: 0,
-          // Floor Y positions evenly distributed from Y=26 down to Y=194
+          cachedHp: hp,
+          cachedLabel: formatNumber(hp),
           y: 26 + ((idx + 1) / floorsHP.length) * (SHAFT_H - 32)
         }));
 
@@ -1025,23 +1358,85 @@
         this.totalLogicalBalls = 0;
         this.totalDamageDealt = 0;
         this.bounceCounter = 0;
+        this.floorsBrokenCount = 0;
         this.ruleTimer = 0;
         this.finished = false;
         this.finishTick = 0;
 
-        // Spawn initial balls near top chamber
         this.spawnLogicalBalls(config.startCount, 6, 20);
+      }
+
+      getFloorLabel(floor) {
+        const roundedHp = Math.round(floor.hp);
+        if (floor.cachedHp !== roundedHp) {
+          floor.cachedHp = roundedHp;
+          floor.cachedLabel = formatNumber(roundedHp);
+        }
+        return floor.cachedLabel;
       }
 
       getActiveFloor() {
         return this.activeFloorIdx < this.floors.length ? this.floors[this.activeFloorIdx] : null;
       }
 
+      applyRuleGrowth(topY) {
+        const rule = this.config.rule;
+        const currentTotal = this.totalLogicalBalls;
+        if (currentTotal >= 1000000) return;
+
+        let toAdd = 0;
+        if (rule.op === 'MULT') {
+          toAdd = Math.max(0, Math.round(currentTotal * (rule.val - 1)));
+        } else {
+          toAdd = Math.max(0, Math.round(rule.val));
+        }
+
+        const safeAdd = Math.min(toAdd, 1000000 - currentTotal);
+        if (safeAdd > 0) {
+          this.spawnLogicalBalls(safeAdd, topY, topY + 11);
+        }
+      }
+
+      radiusForWeight(weight) {
+        const safePower = Math.max(1, weight);
+        // Smooth logarithmic curve: ~1.95px virtual up to ~3.8px virtual (~4.0px to ~8.5px on screen)
+        const scaled = 1.95 + 0.34 * Math.log2(safePower);
+        return Math.max(1.95, Math.min(3.8, scaled));
+      }
+
+      absorbPowerIntoExistingBall(incomingPower) {
+        if (incomingPower <= 0 || this.balls.length === 0) return;
+
+        // Pick a lower-power ball or a seeded active ball so growth distributes naturally
+        let candidateIdx = Math.floor(this.rng() * this.balls.length);
+        const probeIdx = Math.floor(this.rng() * this.balls.length);
+        if (this.balls[probeIdx].weight < this.balls[candidateIdx].weight) {
+          candidateIdx = probeIdx;
+        }
+
+        const target = this.balls[candidateIdx];
+        target.weight += incomingPower;
+        target.r = this.radiusForWeight(target.weight);
+        target.pulse = 1.0;
+        this.clampBallToShaft(target);
+      }
+
+      trimExcessBodiesToCap(targetCap) {
+        while (this.balls.length > targetCap && this.balls.length > 1) {
+          const removed = this.balls.pop();
+          this.absorbPowerIntoExistingBall(removed.weight);
+        }
+      }
+
       spawnLogicalBalls(count, yMin = 5, yMax = 18) {
         if (count <= 0) return;
         this.totalLogicalBalls += count;
 
-        // Determine spawn ceiling based on current active chamber
+        const dynamicCap = getDynamicVisualCap(this.totalLogicalBalls);
+        if (this.balls.length > dynamicCap) {
+          this.trimExcessBodiesToCap(dynamicCap);
+        }
+
         const topBound = this.activeFloorIdx === 0 ? 4 : this.floors[this.activeFloorIdx - 1].y + 3;
         const activeFloor = this.getActiveFloor();
         const bottomBound = activeFloor ? Math.max(topBound + 4, activeFloor.y - 4) : SHAFT_H - 6;
@@ -1049,54 +1444,31 @@
         const spawnYMin = Math.max(topBound + 2, Math.min(yMin, bottomBound - 2));
         const spawnYMax = Math.max(spawnYMin + 1, Math.min(yMax, bottomBound - 1));
 
-        // If adding `count` bodies stays below visual cap, spawn 1-damage standard balls
-        if (this.balls.length + count <= MAX_ACTIVE_BODIES) {
-          for (let i = 0; i < count; i++) {
-            this.balls.push(this.createBallEntity(1, spawnYMin, spawnYMax));
-          }
-        } else {
-          // Cluster into Super-Balls so total logical damage/count remains 100% exact
-          this.clusterExistingBalls();
-          let remaining = count;
-          while (remaining > 0) {
-            const weight = remaining >= 50 ? 50 : remaining >= 10 ? 10 : remaining >= 5 ? 5 : 1;
-            if (this.balls.length >= MAX_ACTIVE_BODIES) {
-              // Merge weight into an existing ball
-              const target = this.balls[Math.floor(this.rng() * this.balls.length)];
-              target.weight += weight;
-              target.r = this.radiusForWeight(target.weight);
-            } else {
-              this.balls.push(this.createBallEntity(weight, spawnYMin, spawnYMax));
-            }
-            remaining -= weight;
-          }
-        }
-      }
+        const availableSlots = Math.max(0, dynamicCap - this.balls.length);
+        const newBodiesToCreate = Math.min(count, availableSlots);
 
-      clusterExistingBalls() {
-        // Merge pairs of small balls into Super-Balls to free body slots
-        const nextBalls = [];
-        this.balls.sort((a, b) => a.weight - b.weight);
-        let i = 0;
-        while (i < this.balls.length) {
-          if (i + 1 < this.balls.length && this.balls[i].weight < 25 && nextBalls.length < MAX_ACTIVE_BODIES * 0.65) {
-            const b1 = this.balls[i];
-            const b2 = this.balls[i + 1];
-            b1.weight += b2.weight;
-            b1.r = this.radiusForWeight(b1.weight);
-            nextBalls.push(b1);
-            i += 2;
+        for (let i = 0; i < newBodiesToCreate; i++) {
+          this.balls.push(this.createBallEntity(1, spawnYMin, spawnYMax));
+        }
+
+        // Any overflow above dynamicCap smoothly swells existing moving balls without resetting the swarm
+        const overflowPower = count - newBodiesToCreate;
+        if (overflowPower > 0) {
+          if (this.balls.length === 0) {
+            this.balls.push(this.createBallEntity(overflowPower, spawnYMin, spawnYMax));
           } else {
-            nextBalls.push(this.balls[i]);
-            i += 1;
+            const chunks = Math.min(overflowPower, 16);
+            const baseChunk = Math.floor(overflowPower / chunks);
+            let remainder = overflowPower % chunks;
+            for (let c = 0; c < chunks; c++) {
+              const addAmt = baseChunk + (remainder > 0 ? 1 : 0);
+              if (remainder > 0) remainder--;
+              if (addAmt > 0) {
+                this.absorbPowerIntoExistingBall(addAmt);
+              }
+            }
           }
         }
-        this.balls = nextBalls;
-      }
-
-      radiusForWeight(weight) {
-        if (weight <= 1) return 1.65;
-        return Math.min(4.0, 1.65 + Math.log10(weight) * 1.1);
       }
 
       clampBallToShaft(b) {
@@ -1121,81 +1493,69 @@
         const safeMaxX = SHAFT_W - r - WALL_PAD - 1;
         const x = safeMinX + this.rng() * Math.max(1, safeMaxX - safeMinX);
         const y = yMin + this.rng() * (yMax - yMin);
-        const vx = (this.rng() - 0.5) * 76;
+        const vx = (this.rng() - 0.5) * 78;
         const vy = -15 + (this.rng() - 0.5) * 40;
-        const ball = { x, y, vx, vy, r, weight, trail: [] };
+        const ball = { x, y, vx, vy, r, weight, pulse: weight > 1 ? 0.6 : 0, trail: [] };
         this.clampBallToShaft(ball);
         return ball;
       }
 
-      applyGrowthRuleOnTick() {
+      registerBounce(topY) {
+        this.bounceCounter++;
         const rule = this.config.rule;
-        if (rule.type === 'TIME_MULT' || rule.type === 'TIME_ADD') {
-          this.ruleTimer += FIXED_DT;
-          if (this.ruleTimer >= rule.interval - 1e-6) {
-            this.ruleTimer -= rule.interval;
-            const currentTotal = this.totalLogicalBalls;
-            const toAdd = rule.type === 'TIME_MULT'
-              ? currentTotal * (rule.mult - 1)
-              : rule.add;
-            // Cap astronomical numbers safely at 1,000,000 logical balls
-            const safeAdd = Math.min(toAdd, 1000000 - currentTotal);
-            if (safeAdd > 0) {
-              const topY = this.activeFloorIdx === 0 ? 5 : this.floors[this.activeFloorIdx - 1].y + 4;
-              this.spawnLogicalBalls(safeAdd, topY, topY + 12);
-            }
-          }
-        }
-      }
-
-      onFloorBroken(brokenFloor) {
-        const rule = this.config.rule;
-        const topY = brokenFloor.y + 3;
-        if (rule.type === 'FLOOR_ADD') {
-          this.spawnLogicalBalls(rule.add, topY, topY + 10);
-        } else if (rule.type === 'FLOOR_MULT') {
-          const toAdd = Math.round(this.totalLogicalBalls * (rule.mult - 1));
-          if (toAdd > 0) this.spawnLogicalBalls(toAdd, topY, topY + 10);
+        if (rule.unit === 'BNC' && this.bounceCounter % rule.interval === 0) {
+          this.applyRuleGrowth(topY);
         }
       }
 
       step(tickCount, spawnParticlesCb) {
         if (this.finished) return;
 
-        // Decay floor hit flash
         for (let f of this.floors) {
           if (f.flash > 0) f.flash = Math.max(0, f.flash - FIXED_DT * 6);
         }
 
-        // Timed growth rules
-        this.applyGrowthRuleOnTick();
+        // Timed growth rule
+        const rule = this.config.rule;
+        if (rule.unit === 'SEC') {
+          this.ruleTimer += FIXED_DT;
+          if (this.ruleTimer >= rule.interval - 1e-6) {
+            this.ruleTimer -= rule.interval;
+            const topY = this.activeFloorIdx === 0 ? 5 : this.floors[this.activeFloorIdx - 1].y + 4;
+            this.applyRuleGrowth(topY);
+          }
+        }
 
         const activeFloor = this.getActiveFloor();
         const floorY = activeFloor ? activeFloor.y : SHAFT_H;
+        const currentChamberTopY = this.activeFloorIdx === 0 ? 5 : this.floors[this.activeFloorIdx - 1].y + 4;
 
         for (let i = 0; i < this.balls.length; i++) {
           const b = this.balls[i];
+          if (b.pulse > 0) {
+            b.pulse = Math.max(0, b.pulse - FIXED_DT * 5.5);
+          }
 
-          // Store short motion trail every 2 ticks
           if (tickCount % 2 === 0) {
             b.trail.push({ x: b.x, y: b.y });
             if (b.trail.length > 4) b.trail.shift();
           }
 
-          // Gravity integration
           b.vy += GRAVITY * FIXED_DT;
           b.x += b.vx * FIXED_DT;
           b.y += b.vy * FIXED_DT;
 
-          // Strict Left & Right Shaft Wall Collisions + Boundary Clamping
+          // Left & Right Wall Collisions + Bounce Counter
           const minX = b.r + WALL_PAD;
           const maxX = SHAFT_W - b.r - WALL_PAD;
           if (b.x <= minX) {
             b.x = minX;
             b.vx = Math.max(12, Math.abs(b.vx) * RESTITUTION);
+            this.registerBounce(currentChamberTopY);
           } else if (b.x >= maxX) {
             b.x = maxX;
             b.vx = -Math.max(12, Math.abs(b.vx) * RESTITUTION);
+            this.registerBounce(currentChamberTopY);
           }
 
           // Top Ceiling Collision
@@ -1207,51 +1567,62 @@
           // Active Floor Barrier Collision
           if (activeFloor && !activeFloor.broken && b.y + b.r >= floorY) {
             b.y = floorY - b.r;
-            // High-energy upward rebound + deterministic horizontal scatter so balls
-            // circulate high throughout the chamber instead of pooling on the floor
-            const jitterVx = (this.rng() - 0.5) * 44;
-            b.vx = Math.max(-82, Math.min(82, b.vx * 0.96 + jitterVx));
+            const jitterVx = (this.rng() - 0.5) * 46;
+            b.vx = Math.max(-84, Math.min(84, b.vx * 0.96 + jitterVx));
             const reboundBoost = MIN_FLOOR_REBOUND_VY + (this.rng() * 24);
-            b.vy = -Math.min(185, Math.max(reboundBoost, Math.abs(b.vy) * RESTITUTION));
-
-            // Re-clamp X after any velocity/radius changes
+            b.vy = -Math.min(190, Math.max(reboundBoost, Math.abs(b.vy) * RESTITUTION));
             this.clampBallToShaft(b);
 
-            // Apply Damage to Active Floor
+            // Apply damage
             const dmg = b.weight;
             activeFloor.hp = Math.max(0, activeFloor.hp - dmg);
             activeFloor.flash = 1.0;
             this.totalDamageDealt += dmg;
 
-            // Bounce milestone rule check
-            this.bounceCounter++;
-            if (this.config.rule.type === 'BOUNCE_ADD' && this.bounceCounter % this.config.rule.every === 0) {
-              const topY = this.activeFloorIdx === 0 ? 5 : this.floors[this.activeFloorIdx - 1].y + 4;
-              this.spawnLogicalBalls(this.config.rule.add, topY, topY + 10);
-            }
+            // Count floor bounce toward Bounce-based growth rules
+            this.registerBounce(currentChamberTopY);
 
-            // Audio & micro-sparks
             soundFX.playHit(activeFloor.hp / activeFloor.maxHp, this.sideId === 'LEFT');
-            if (spawnParticlesCb && this.rng() < 0.35) {
+            if (spawnParticlesCb && this.rng() < 0.25) {
               spawnParticlesCb(this.sideId, b.x, floorY, 2, false);
             }
 
-            // Check Floor Breakthrough!
+            // Check Floor Breakthrough (drain any leftover HP across subsequent floors cleanly)
+            let overflowDmg = activeFloor.hp === 0 ? 0 : -1;
             if (activeFloor.hp <= 0) {
               activeFloor.broken = true;
+              this.floorsBrokenCount++;
               soundFX.playFloorBreak(activeFloor.index);
               if (spawnParticlesCb) {
-                spawnParticlesCb(this.sideId, SHAFT_W * 0.5, floorY, 22, true);
+                spawnParticlesCb(this.sideId, SHAFT_W * 0.5, floorY, 18, true);
               }
-              this.onFloorBroken(activeFloor);
-              this.activeFloorIdx++;
 
-              // Check if bottom-most floor was just shattered -> VICTORY!
+              if (rule.unit === 'FLR' && this.floorsBrokenCount % rule.interval === 0) {
+                this.applyRuleGrowth(activeFloor.y + 3);
+              }
+
+              this.activeFloorIdx++;
               if (this.activeFloorIdx >= this.floors.length) {
                 this.finished = true;
                 this.finishTick = tickCount;
                 return;
               }
+              overflowDmg = 0;
+            }
+
+            // Carry excess impact damage onto the newly exposed floor when a high-power ball shatters a barrier
+            if (overflowDmg === 0) {
+              let carry = Math.max(0, dmg - (activeFloor.maxHp - (activeFloor.maxHp - dmg)));
+              // Since activeFloor.hp reached 0, any extra power beyond what broke it can help chip the next floor slightly
+              const nextFloor = this.getActiveFloor();
+              if (nextFloor && b.weight > 1) {
+                const chip = Math.min(nextFloor.hp - 1, Math.floor(b.weight * 0.25));
+                if (chip > 0) {
+                  nextFloor.hp = Math.max(1, nextFloor.hp - chip);
+                  this.totalDamageDealt += chip;
+                }
+              }
+              void carry;
             }
           }
         }
@@ -1260,17 +1631,21 @@
 
 
     /* =========================================================================
-       5. THEMES, STATE MANAGEMENT, PERSISTENCE & RENDER LOOP
+       5. THEMES, MULTI-SCREEN NAVIGATION, SEPARATE DAILY & STANDARD STATS
     ========================================================================= */
     const THEME_PRESETS = [
-      { id: 'neon', name: 'Neon Classic', left: '#00E5FF', right: '#FF9100', bg: '#0D0E12', panel: '#14161D' },
-      { id: 'synth', name: 'Synthwave', left: '#FF2A85', right: '#FFD600', bg: '#100B1C', panel: '#19112B' },
-      { id: 'emerald', name: 'Deep Emerald', left: '#34D399', right: '#FBBF24', bg: '#071310', panel: '#0D211C' },
-      { id: 'slate', name: 'Midnight Slate', left: '#38BDF8', right: '#FB7185', bg: '#0F172A', panel: '#1E293B' },
+      { id: 'neon', name: 'Cyan & Amber', left: '#00E5FF', right: '#FF9100', bg: '#0D0E12', panel: '#14161D' },
+      { id: 'synth', name: 'Violet & Lime', left: '#C084FC', right: '#A3E635', bg: '#0F0B1A', panel: '#181329' },
+      { id: 'emerald', name: 'Gold & Mint', left: '#FBBF24', right: '#34D399', bg: '#071310', panel: '#0D211C' },
+      { id: 'slate', name: 'Sky & Rose', left: '#38BDF8', right: '#FB7185', bg: '#0F172A', panel: '#1E293B' },
       { id: 'daylight', name: 'Crisp Daylight', left: '#0284C7', right: '#EA580C', bg: '#E2E8F0', panel: '#F8FAFC' }
     ];
 
     const appState = {
+      currentView: 'view-home', // 'view-home' | 'view-custom' | 'view-arena'
+      isDailyMatch: false,
+      dailyWatchOnly: false,
+      lastCustomConfig: null,
       raceSpec: null,
       leftSim: null,
       rightSim: null,
@@ -1285,6 +1660,16 @@
       proHud: false,
       theme: { ...THEME_PRESETS[0] },
       dpsTracker: { lastTime: 0, lastLeftDmg: 0, lastRightDmg: 0, leftDps: 0, rightDps: 0 },
+      // Separate Daily Challenge Stats & Standard Stats
+      dailyStats: {
+        wins: 0,
+        losses: 0,
+        streak: 0,
+        bestStreak: 0,
+        lastPlayedDate: null, // 'YYYY-MM-DD'
+        lastPick: null,
+        lastCorrect: null
+      },
       stats: {
         wins: 0,
         losses: 0,
@@ -1296,6 +1681,284 @@
       }
     };
 
+    /* -------------------------------------------------------------------------
+       Screen Router (Home / Custom Builder / Arena)
+    ------------------------------------------------------------------------- */
+    function showView(viewId) {
+      appState.currentView = viewId;
+      ['view-home', 'view-custom', 'view-arena'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id === viewId) {
+          el.classList.remove('hidden');
+          el.classList.add('flex');
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
+      });
+
+      if (viewId === 'view-arena') {
+        requestAnimationFrame(() => {
+          resizeCanvas();
+          renderScene();
+        });
+      } else if (viewId === 'view-home') {
+        refreshHomeScreenUI();
+      } else if (viewId === 'view-custom') {
+        updateBuilderPreviews();
+      }
+    }
+
+    function returnToHome() {
+      // Pause any active simulation cleanly when returning to Home
+      if (appState.status === 'RUNNING') {
+        appState.status = 'PREDICT';
+      }
+      showView('view-home');
+    }
+
+    function openSettings() {
+      openDrawer('panel-controls');
+    }
+
+    /* -------------------------------------------------------------------------
+       Daily Challenge Helpers (UTC Date Key, Single Guess Lock, Separate Stats)
+    ------------------------------------------------------------------------- */
+    function getTodayUtcDateStr() {
+      const now = new Date();
+      const y = now.getUTCFullYear();
+      const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(now.getUTCDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getYesterdayUtcDateStr() {
+      const now = new Date(Date.now() - 86400000);
+      const y = now.getUTCFullYear();
+      const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(now.getUTCDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getDailySeedHash() {
+      const utcKey = `DAILY-${getTodayUtcDateStr()}`;
+      return formatStandardHash(stringToSeed32(utcKey));
+    }
+
+    function hasPlayedDailyToday() {
+      return appState.dailyStats.lastPlayedDate === getTodayUtcDateStr();
+    }
+
+    function refreshHomeScreenUI() {
+      const playedToday = hasPlayedDailyToday();
+      const ds = appState.dailyStats;
+      const st = appState.stats;
+
+      const now = new Date();
+      const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      const calMonthEl = document.getElementById('home-daily-cal-month');
+      const calDayEl = document.getElementById('home-daily-cal-day');
+      if (calMonthEl) calMonthEl.textContent = monthNames[now.getUTCMonth()];
+      if (calDayEl) calDayEl.textContent = String(now.getUTCDate());
+
+      const btn = document.getElementById('home-daily-btn');
+      const streakEl = document.getElementById('home-daily-streak');
+
+      streakEl.textContent = `${ds.streak}🔥`;
+
+      if (playedToday) {
+        btn.classList.add('opacity-65');
+      } else {
+        btn.classList.remove('opacity-65');
+      }
+
+      document.getElementById('home-footer-daily').textContent = `${ds.wins}W-${ds.losses}L`;
+      document.getElementById('home-footer-std').textContent = `${st.wins}W-${st.losses}L`;
+    }
+
+    function launchDailyChallenge() {
+      const dailyHash = getDailySeedHash();
+      const playedToday = hasPlayedDailyToday();
+      appState.isDailyMatch = true;
+      appState.dailyWatchOnly = playedToday;
+      loadRaceByHash(dailyHash, { isDaily: true, watchOnly: playedToday });
+      showView('view-arena');
+    }
+
+    function launchRandomRaceFromHome() {
+      appState.isDailyMatch = false;
+      appState.dailyWatchOnly = false;
+      generateRandomRace();
+      showView('view-arena');
+    }
+
+    function importRaceFromHome() {
+      const val = document.getElementById('home-import-input').value.trim();
+      if (!val) {
+        showToast('Paste a race hash first');
+        return;
+      }
+      const isDailySeed = val.toUpperCase() === getDailySeedHash();
+      loadRaceByHash(val, {
+        isDaily: isDailySeed,
+        watchOnly: isDailySeed && hasPlayedDailyToday()
+      });
+      showView('view-arena');
+      showToast(`Loaded seed: ${appState.raceSpec.hash}`);
+    }
+
+    /* -------------------------------------------------------------------------
+       Custom Race Builder Logic
+    ------------------------------------------------------------------------- */
+    function getBuilderConfig() {
+      const lStart = Math.max(1, Math.min(9999, parseInt(document.getElementById('cb-l-start').value, 10) || 2));
+      const lOp = document.getElementById('cb-l-op').value === 'MULT' ? 'MULT' : 'ADD';
+      const lVal = Math.max(0, Math.min(5000, parseFloat(document.getElementById('cb-l-val').value) || 0));
+      const lInt = Math.max(1, Math.min(5000, parseInt(document.getElementById('cb-l-int').value, 10) || 1));
+      const lUnit = document.getElementById('cb-l-unit').value;
+
+      const rStart = Math.max(1, Math.min(9999, parseInt(document.getElementById('cb-r-start').value, 10) || 350));
+      const rOp = document.getElementById('cb-r-op').value === 'MULT' ? 'MULT' : 'ADD';
+      const rVal = Math.max(0, Math.min(5000, parseFloat(document.getElementById('cb-r-val').value) || 0));
+      const rInt = Math.max(1, Math.min(5000, parseInt(document.getElementById('cb-r-int').value, 10) || 1));
+      const rUnit = document.getElementById('cb-r-unit').value;
+
+      const floors = Math.max(4, Math.min(15, parseInt(document.getElementById('cb-floors').value, 10) || 10));
+      const totalHits = Math.max(1000, Math.min(2000000, parseInt(document.getElementById('cb-total-hits').value, 10) || 45000));
+      const curve = document.getElementById('cb-curve').value;
+
+      return {
+        lStart, lRule: makeRule(lOp, lVal, lInt, lUnit),
+        rStart, rRule: makeRule(rOp, rVal, rInt, rUnit),
+        floors, totalHits, curve
+      };
+    }
+
+    function encodeCustomHashFromBuilder() {
+      const c = getBuilderConfig();
+      const lOpChar = c.lRule.op === 'MULT' ? 'M' : 'A';
+      const rOpChar = c.rRule.op === 'MULT' ? 'M' : 'A';
+      const lValEnc = Math.round(c.lRule.val * 10).toString(36).toUpperCase();
+      const rValEnc = Math.round(c.rRule.val * 10).toString(36).toUpperCase();
+      const salt = Math.floor(1000 + Math.random() * 45000).toString(36).toUpperCase();
+
+      return [
+        'BRC',
+        c.lStart.toString(36).toUpperCase(),
+        lOpChar,
+        lValEnc,
+        c.lRule.interval.toString(36).toUpperCase(),
+        c.lRule.unit,
+        c.rStart.toString(36).toUpperCase(),
+        rOpChar,
+        rValEnc,
+        c.rRule.interval.toString(36).toUpperCase(),
+        c.rRule.unit,
+        c.floors.toString(36).toUpperCase(),
+        c.totalHits.toString(36).toUpperCase(),
+        c.curve,
+        salt
+      ].join('-');
+    }
+
+    function updateBuilderPreviews() {
+      const c = getBuilderConfig();
+      document.getElementById('builder-l-preview').textContent =
+        `${formatNumber(c.lStart)} • ${c.lRule.label.toLowerCase()}`;
+      document.getElementById('builder-r-preview').textContent =
+        `${formatNumber(c.rStart)} • ${c.rRule.label.toLowerCase()}`;
+
+      const floorArr = buildFloorsFromTotalHits(c.floors, c.totalHits, c.curve);
+      const actualSum = floorArr.reduce((a, b) => a + b, 0);
+      document.getElementById('builder-floor-summary').textContent =
+        `${c.floors} Floors • ${formatNumber(actualSum)} Hits`;
+      document.getElementById('builder-floors-strip').textContent =
+        `Floors: ${floorArr.map((hp) => formatCompact(hp)).join(' → ')}`;
+    }
+
+    function randomizeBuilderInputs() {
+      const units = ['SEC', 'BNC', 'FLR'];
+      const ops = ['ADD', 'MULT'];
+      const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+      const lOp = pick(ops);
+      const lUnit = pick(units);
+      document.getElementById('cb-l-start').value = lOp === 'MULT' ? (2 + Math.floor(Math.random() * 4)) : (30 + Math.floor(Math.random() * 120));
+      document.getElementById('cb-l-op').value = lOp;
+      document.getElementById('cb-l-val').value = lOp === 'MULT' ? 2 : (lUnit === 'BNC' ? 1 : 60);
+      document.getElementById('cb-l-int').value = lUnit === 'BNC' ? 35 : (lUnit === 'SEC' ? 4 : 1);
+      document.getElementById('cb-l-unit').value = lUnit;
+
+      const rOp = pick(ops);
+      const rUnit = pick(units);
+      document.getElementById('cb-r-start').value = rOp === 'MULT' ? (3 + Math.floor(Math.random() * 5)) : (120 + Math.floor(Math.random() * 250));
+      document.getElementById('cb-r-op').value = rOp;
+      document.getElementById('cb-r-val').value = rOp === 'MULT' ? 1.5 : (rUnit === 'BNC' ? 2 : 100);
+      document.getElementById('cb-r-int').value = rUnit === 'BNC' ? 45 : (rUnit === 'SEC' ? 2 : 1);
+      document.getElementById('cb-r-unit').value = rUnit;
+
+      document.getElementById('cb-floors').value = 8 + Math.floor(Math.random() * 5);
+      document.getElementById('cb-total-hits').value = (25 + Math.floor(Math.random() * 40)) * 1000;
+      updateBuilderPreviews();
+    }
+
+    function launchCustomRaceFromBuilder() {
+      const cfg = getBuilderConfig();
+      appState.lastCustomConfig = {
+        ...cfg,
+        lRule: { ...cfg.lRule },
+        rRule: { ...cfg.rRule }
+      };
+      const hash = encodeCustomHashFromBuilder();
+      loadRaceByHash(hash, { isDaily: false, watchOnly: false, customConfig: appState.lastCustomConfig });
+      showView('view-arena');
+      showToast('Custom race launched!');
+    }
+
+    function applyConfigToBuilderInputs(cfg) {
+      if (!cfg) return;
+      document.getElementById('cb-l-start').value = cfg.lStart;
+      document.getElementById('cb-l-op').value = cfg.lRule.op;
+      document.getElementById('cb-l-val').value = cfg.lRule.val;
+      document.getElementById('cb-l-int').value = cfg.lRule.interval;
+      document.getElementById('cb-l-unit').value = cfg.lRule.unit;
+
+      document.getElementById('cb-r-start').value = cfg.rStart;
+      document.getElementById('cb-r-op').value = cfg.rRule.op;
+      document.getElementById('cb-r-val').value = cfg.rRule.val;
+      document.getElementById('cb-r-int').value = cfg.rRule.interval;
+      document.getElementById('cb-r-unit').value = cfg.rRule.unit;
+
+      document.getElementById('cb-floors').value = cfg.floors;
+      document.getElementById('cb-total-hits').value = cfg.totalHits;
+      document.getElementById('cb-curve').value = cfg.curve;
+      updateBuilderPreviews();
+    }
+
+    function editLastCustomSetup() {
+      const cfg = (appState.raceSpec && appState.raceSpec.customConfig) || appState.lastCustomConfig;
+      if (!cfg) {
+        showView('view-custom');
+        return;
+      }
+      if (appState.status === 'RUNNING') {
+        appState.status = 'PREDICT';
+      }
+      applyConfigToBuilderInputs(cfg);
+      showView('view-custom');
+      showToast('Loaded setup into Custom Race Lab');
+    }
+
+    function copyCustomHashFromBuilder() {
+      const hash = encodeCustomHashFromBuilder();
+      copyTextFallback(hash);
+      showToast(`Copied custom hash: ${hash}`);
+    }
+
+    /* -------------------------------------------------------------------------
+       Themes & Persistence
+    ------------------------------------------------------------------------- */
     function hexToRgba(hex, alpha) {
       const clean = hex.replace('#', '');
       const bigint = parseInt(clean, 16);
@@ -1321,10 +1984,9 @@
       root.style.setProperty('--right-glow', hexToRgba(appState.theme.right, 0.45));
       root.style.setProperty('--right-tint', hexToRgba(appState.theme.right, 0.12));
 
-      // Apply background & arena surface directly so custom backdrops update immediately
       document.body.style.backgroundColor = appState.theme.bg;
-      const arena = document.getElementById('center-arena');
-      if (arena) arena.style.backgroundColor = appState.theme.bg;
+      const shell = document.getElementById('center-shell');
+      if (shell) shell.style.backgroundColor = appState.theme.bg;
       const canvasWrap = document.getElementById('canvas-wrapper');
       if (canvasWrap) canvasWrap.style.backgroundColor = appState.theme.panel;
 
@@ -1374,14 +2036,25 @@
       });
     }
 
-    /* -------------------------------------------------------------------------
-       Persistence (Stats & History)
-    ------------------------------------------------------------------------- */
     function loadSavedData() {
       try {
         const savedStats = localStorage.getItem('bounce_race_stats');
         if (savedStats) {
           appState.stats = { ...appState.stats, ...JSON.parse(savedStats) };
+        }
+        const savedDaily = localStorage.getItem('bounce_race_daily_stats');
+        if (savedDaily) {
+          appState.dailyStats = { ...appState.dailyStats, ...JSON.parse(savedDaily) };
+          // Reset daily streak if user missed yesterday
+          const today = getTodayUtcDateStr();
+          const yesterday = getYesterdayUtcDateStr();
+          if (
+            appState.dailyStats.lastPlayedDate &&
+            appState.dailyStats.lastPlayedDate !== today &&
+            appState.dailyStats.lastPlayedDate !== yesterday
+          ) {
+            appState.dailyStats.streak = 0;
+          }
         }
         const savedTheme = localStorage.getItem('bounce_race_theme');
         if (savedTheme) {
@@ -1398,22 +2071,42 @@
         applyTheme(THEME_PRESETS[0]);
       }
       renderStatsUI();
+      refreshHomeScreenUI();
     }
 
-    function saveStats() {
+    function saveAllStats() {
       try {
         localStorage.setItem('bounce_race_stats', JSON.stringify(appState.stats));
+        localStorage.setItem('bounce_race_daily_stats', JSON.stringify(appState.dailyStats));
       } catch (e) {}
       renderStatsUI();
+      refreshHomeScreenUI();
     }
 
     function clearHistory() {
       appState.stats.history = [];
-      saveStats();
+      saveAllStats();
       showToast('Match history cleared');
     }
 
     function renderStatsUI() {
+      // Daily Stats
+      const ds = appState.dailyStats;
+      const playedToday = hasPlayedDailyToday();
+      document.getElementById('daily-stat-streak').textContent = `${ds.streak}🔥`;
+      document.getElementById('daily-stat-best').textContent = `${ds.bestStreak}`;
+      document.getElementById('daily-stat-record').textContent = `${ds.wins}W-${ds.losses}L`;
+
+      const statusPill = document.getElementById('daily-status-pill');
+      if (playedToday) {
+        statusPill.textContent = 'Played Today';
+        statusPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300';
+      } else {
+        statusPill.textContent = 'Ready';
+        statusPill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300';
+      }
+
+      // Standard Stats
       const s = appState.stats;
       const total = s.wins + s.losses;
       const winRate = total > 0 ? Math.round((s.wins / total) * 100) : 0;
@@ -1444,14 +2137,16 @@
           : item.correct
             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
             : 'bg-rose-500/20 text-rose-300 border border-rose-500/30';
-        const badgeText = item.userPick === 'NONE' ? 'WATCHED' : item.correct ? 'WON PICK' : 'MISSED';
+        const badgeText = item.userPick === 'NONE' ? 'WATCHED' : item.correct ? 'WON' : 'MISSED';
+        const dailyTag = item.isDaily ? `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-500/25 text-indigo-300">DAILY</span>` : '';
 
         return `
-          <div onclick="loadRaceByHash('${item.hash}'); closeDrawers();"
+          <div onclick="loadRaceByHash('${item.hash}', { isDaily: ${!!item.isDaily}, watchOnly: ${!!item.isDaily && hasPlayedDailyToday()} }); closeDrawers(); showView('view-arena');"
             class="cursor-pointer bg-[#1B1E28] hover:bg-[#232734] border border-white/5 rounded-xl p-2.5 flex items-center justify-between transition">
             <div class="min-w-0">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5">
                 <span class="font-mono-num text-xs font-bold text-white">${item.hash}</span>
+                ${dailyTag}
                 <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded ${badgeClass}">${badgeText}</span>
               </div>
               <div class="text-[11px] text-slate-400 truncate mt-0.5">${item.summary}</div>
@@ -1463,43 +2158,20 @@
     }
 
     /* -------------------------------------------------------------------------
-       Race Initialization, Daily Seed, Custom Builder & Sharing
+       Race Lifecycle & Immediate HUD Reset
     ------------------------------------------------------------------------- */
-    function getDailySeedHash() {
-      const now = new Date();
-      const utcKey = `DAILY-${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${now.getUTCDate()}`;
-      return formatStandardHash(stringToSeed32(utcKey));
-    }
-
-    function loadDailySeed() {
-      const dailyHash = getDailySeedHash();
-      loadRaceByHash(dailyHash);
-      showToast(`Loaded Daily Challenge (${dailyHash})`);
-    }
-
     function generateRandomRace() {
       const randomSeed = (Math.floor(Math.random() * 0xFFFFFFFF)) >>> 0;
-      loadRaceByHash(formatStandardHash(randomSeed));
+      loadRaceByHash(formatStandardHash(randomSeed), { isDaily: false, watchOnly: false });
     }
 
     function replayCurrentSeed() {
-      if (appState.raceSpec) {
-        loadRaceByHash(appState.raceSpec.hash);
-      }
-    }
-
-    function buildCustomRace() {
-      const lStart = Math.max(1, Math.min(9999, parseInt(document.getElementById('custom-l-start').value, 10) || 2));
-      const lRule = parseInt(document.getElementById('custom-l-rule').value, 10) || 0;
-      const rStart = Math.max(1, Math.min(9999, parseInt(document.getElementById('custom-r-start').value, 10) || 400));
-      const rRule = parseInt(document.getElementById('custom-r-rule').value, 10) || 5;
-      const floors = parseInt(document.getElementById('custom-floors').value, 10) || 10;
-      const salt = Math.floor(Math.random() * 46655).toString(36).toUpperCase();
-
-      const customHash = `BRC-${lStart.toString(36).toUpperCase()}-${lRule.toString(36).toUpperCase()}-${rStart.toString(36).toUpperCase()}-${rRule.toString(36).toUpperCase()}-${floors.toString(36).toUpperCase()}-${salt}`;
-      loadRaceByHash(customHash);
-      closeDrawers();
-      showToast('Custom shareable race created!');
+      if (!appState.raceSpec) return;
+      const isDaily = appState.isDailyMatch || appState.raceSpec.hash === getDailySeedHash();
+      loadRaceByHash(appState.raceSpec.hash, {
+        isDaily,
+        watchOnly: isDaily && hasPlayedDailyToday()
+      });
     }
 
     function importSeedFromInput() {
@@ -1508,25 +2180,53 @@
         showToast('Enter a race hash first');
         return;
       }
-      loadRaceByHash(val);
+      const isDaily = val.toUpperCase() === getDailySeedHash();
+      loadRaceByHash(val, { isDaily, watchOnly: isDaily && hasPlayedDailyToday() });
       closeDrawers();
+      showView('view-arena');
       showToast(`Loaded seed: ${appState.raceSpec.hash}`);
     }
 
-    function loadRaceByHash(hashInput) {
+    function resetTelemetryHUD() {
+      appState.tickCount = 0;
+      appState.accumulator = 0;
+      appState.dpsTracker = { lastTime: 0, lastLeftDmg: 0, lastRightDmg: 0, leftDps: 0, rightDps: 0 };
+
+      document.getElementById('race-timer').textContent = '0.0s';
+      document.getElementById('hud-left-dps').textContent = '0';
+      document.getElementById('hud-right-dps').textContent = '0';
+      document.getElementById('hud-left-dmg').textContent = '0';
+      document.getElementById('hud-right-dmg').textContent = '0';
+    }
+
+    function loadRaceByHash(hashInput, options = {}) {
       const spec = decodeRaceFromHash(hashInput);
+      if (spec.isCustom && spec.customConfig) {
+        appState.lastCustomConfig = {
+          ...spec.customConfig,
+          lRule: { ...spec.customConfig.lRule },
+          rRule: { ...spec.customConfig.rRule }
+        };
+      } else if (options.customConfig) {
+        spec.isCustom = true;
+        spec.customConfig = options.customConfig;
+      }
+      const isDaily = options.isDaily !== undefined ? options.isDaily : (spec.hash === getDailySeedHash());
+      const watchOnly = options.watchOnly !== undefined ? options.watchOnly : (isDaily && hasPlayedDailyToday());
+
+      appState.isDailyMatch = isDaily;
+      appState.dailyWatchOnly = watchOnly;
       appState.raceSpec = spec;
       appState.leftSim = new ShaftSimulation('LEFT', spec.left, spec.floors, spec.seed32);
       appState.rightSim = new ShaftSimulation('RIGHT', spec.right, spec.floors, spec.seed32);
       appState.status = 'PREDICT';
       appState.userPick = null;
       appState.winner = null;
-      appState.tickCount = 0;
-      appState.accumulator = 0;
       appState.particles = [];
-      appState.dpsTracker = { lastTime: 0, lastLeftDmg: 0, lastRightDmg: 0, leftDps: 0, rightDps: 0 };
 
-      // Update URL parameter cleanly without reloading
+      // Immediately reset HUD counters, timer, and DPS/DMG readouts to 0
+      resetTelemetryHUD();
+
       try {
         const url = new URL(window.location.href);
         url.searchParams.set('seed', spec.hash);
@@ -1535,29 +2235,83 @@
 
       // Update Header UI
       document.getElementById('header-seed-text').textContent = spec.hash;
+      const modeDot = document.getElementById('arena-mode-dot');
+      modeDot.className = isDaily
+        ? 'w-2 h-2 rounded-full bg-indigo-400 shrink-0'
+        : 'w-2 h-2 rounded-full bg-emerald-400 shrink-0';
+
       document.getElementById('left-count-display').textContent = formatNumber(spec.left.startCount);
       document.getElementById('right-count-display').textContent = formatNumber(spec.right.startCount);
       document.getElementById('left-rule-display').textContent = spec.left.rule.label;
       document.getElementById('right-rule-display').textContent = spec.right.rule.label;
-      document.getElementById('race-timer').textContent = '00.0s';
 
-      // Reset Overlays & Buttons
+      // Reset Overlays & Controls
       document.getElementById('result-overlay').classList.add('hidden');
-      document.getElementById('user-pick-banner').classList.add('hidden');
-      document.getElementById('controls-predict').classList.remove('hidden');
       document.getElementById('controls-running').classList.add('hidden');
       document.getElementById('controls-running').classList.remove('grid');
+
+      const predictBox = document.getElementById('controls-predict');
+      const dailyLockedBox = document.getElementById('controls-daily-locked');
+      const banner = document.getElementById('user-pick-banner');
+      const badge = document.getElementById('user-pick-badge');
+
+      if (watchOnly) {
+        // Daily Challenge already guessed today -> Watch-Only mode
+        predictBox.classList.add('hidden');
+        dailyLockedBox.classList.remove('hidden');
+        dailyLockedBox.classList.add('flex');
+
+        document.getElementById('daily-locked-prev-pick').textContent =
+          `Today's guess: ${appState.dailyStats.lastPick || 'NONE'}`;
+
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+        badge.textContent = 'DAILY PLAYED · WATCH ONLY';
+        badge.style.color = '#A5B4FC';
+        badge.style.borderColor = 'rgba(129, 140, 248, 0.45)';
+        badge.style.backgroundColor = 'rgba(99, 102, 241, 0.16)';
+      } else {
+        dailyLockedBox.classList.add('hidden');
+        dailyLockedBox.classList.remove('flex');
+        predictBox.classList.remove('hidden');
+
+        if (isDaily) {
+          document.getElementById('predict-prompt-label').textContent = '📅 Daily Challenge (1 guess):';
+          document.getElementById('btn-just-watch').classList.add('hidden');
+          banner.classList.remove('hidden');
+          banner.classList.add('flex');
+          badge.textContent = 'DAILY CHALLENGE · LOCK YOUR GUESS';
+          badge.style.color = '#FCD34D';
+          badge.style.borderColor = 'rgba(251, 191, 36, 0.45)';
+          badge.style.backgroundColor = 'rgba(245, 158, 11, 0.14)';
+        } else {
+          document.getElementById('predict-prompt-label').textContent = 'Inspect floors & pick winner:';
+          document.getElementById('btn-just-watch').classList.remove('hidden');
+          banner.classList.add('hidden');
+        }
+      }
+
+      renderScene();
     }
 
     function startRace(pickSide) {
+      // Enforce 1-guess-per-day lock if Daily Challenge was already played
+      if (appState.isDailyMatch && appState.dailyWatchOnly) {
+        pickSide = 'NONE';
+      }
+
       soundFX.ensureContext();
       appState.userPick = pickSide;
       appState.status = 'RUNNING';
 
-      if (pickSide === 'LEFT') appState.stats.pickedLeft++;
-      if (pickSide === 'RIGHT') appState.stats.pickedRight++;
+      if (!appState.isDailyMatch) {
+        if (pickSide === 'LEFT') appState.stats.pickedLeft++;
+        if (pickSide === 'RIGHT') appState.stats.pickedRight++;
+      }
 
       document.getElementById('controls-predict').classList.add('hidden');
+      document.getElementById('controls-daily-locked').classList.add('hidden');
+      document.getElementById('controls-daily-locked').classList.remove('flex');
       document.getElementById('controls-running').classList.remove('hidden');
       document.getElementById('controls-running').classList.add('grid');
 
@@ -1567,17 +2321,17 @@
       banner.classList.add('flex');
 
       if (pickSide === 'LEFT') {
-        badge.textContent = 'YOUR PICK: LEFT';
+        badge.textContent = appState.isDailyMatch ? 'DAILY PICK: LEFT' : 'YOUR PICK: LEFT';
         badge.style.color = 'var(--left-color)';
         badge.style.borderColor = 'var(--left-color)';
         badge.style.backgroundColor = 'var(--left-tint)';
       } else if (pickSide === 'RIGHT') {
-        badge.textContent = 'YOUR PICK: RIGHT';
+        badge.textContent = appState.isDailyMatch ? 'DAILY PICK: RIGHT' : 'YOUR PICK: RIGHT';
         badge.style.color = 'var(--right-color)';
         badge.style.borderColor = 'var(--right-color)';
         badge.style.backgroundColor = 'var(--right-tint)';
       } else {
-        badge.textContent = 'SPECTATOR MODE';
+        badge.textContent = appState.dailyWatchOnly ? 'DAILY REPLAY · WATCH ONLY' : 'SPECTATOR MODE';
         badge.style.color = '#CBD5E1';
         badge.style.borderColor = 'rgba(255,255,255,0.2)';
         badge.style.backgroundColor = 'rgba(255,255,255,0.06)';
@@ -1601,37 +2355,67 @@
         `${formatCompact(appState.leftSim.totalLogicalBalls)} vs ${formatCompact(appState.rightSim.totalLogicalBalls)}`;
       document.getElementById('result-seed-code').textContent = appState.raceSpec.hash;
 
+      const editCustomBtn = document.getElementById('btn-result-edit-custom');
+      if (editCustomBtn) {
+        const hasCustom = Boolean(appState.raceSpec.isCustom || appState.lastCustomConfig);
+        editCustomBtn.classList.toggle('hidden', !hasCustom);
+      }
+
       const pill = document.getElementById('result-prediction-pill');
       let correct = false;
 
       if (appState.userPick === 'NONE' || !appState.userPick) {
-        pill.textContent = 'SIMULATION COMPLETE';
+        pill.textContent = appState.dailyWatchOnly ? 'DAILY REPLAY COMPLETE' : 'SIMULATION COMPLETE';
         pill.className = 'text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full mb-3 border border-white/20 bg-white/10 text-slate-200';
       } else if (appState.userPick === winnerSide) {
         correct = true;
-        appState.stats.wins++;
-        appState.stats.streak++;
-        appState.stats.bestStreak = Math.max(appState.stats.bestStreak, appState.stats.streak);
-        pill.textContent = '🎯 PREDICTION CORRECT!';
+        if (appState.isDailyMatch) {
+          appState.dailyStats.wins++;
+          appState.dailyStats.streak++;
+          appState.dailyStats.bestStreak = Math.max(appState.dailyStats.bestStreak, appState.dailyStats.streak);
+          appState.dailyStats.lastPlayedDate = getTodayUtcDateStr();
+          appState.dailyStats.lastPick = appState.userPick;
+          appState.dailyStats.lastCorrect = true;
+          appState.dailyWatchOnly = true;
+          pill.textContent = `📅 DAILY WIN! (${appState.dailyStats.streak}🔥 STREAK)`;
+        } else {
+          appState.stats.wins++;
+          appState.stats.streak++;
+          appState.stats.bestStreak = Math.max(appState.stats.bestStreak, appState.stats.streak);
+          pill.textContent = '🎯 PREDICTION CORRECT!';
+        }
         pill.className = 'text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full mb-3 border border-emerald-400/50 bg-emerald-500/20 text-emerald-300';
       } else {
-        appState.stats.losses++;
-        appState.stats.streak = 0;
-        pill.textContent = '❌ PREDICTION MISSED';
+        if (appState.isDailyMatch) {
+          appState.dailyStats.losses++;
+          appState.dailyStats.streak = 0;
+          appState.dailyStats.lastPlayedDate = getTodayUtcDateStr();
+          appState.dailyStats.lastPick = appState.userPick;
+          appState.dailyStats.lastCorrect = false;
+          appState.dailyWatchOnly = true;
+          pill.textContent = '📅 DAILY MISSED · STREAK RESET';
+        } else {
+          appState.stats.losses++;
+          appState.stats.streak = 0;
+          pill.textContent = '❌ PREDICTION MISSED';
+        }
         pill.className = 'text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full mb-3 border border-rose-400/50 bg-rose-500/20 text-rose-300';
       }
 
-      // Record in match history
-      appState.stats.history.unshift({
-        hash: appState.raceSpec.hash,
-        winner: winnerSide,
-        userPick: appState.userPick || 'NONE',
-        correct,
-        summary: `${formatCompact(appState.raceSpec.left.startCount)} vs ${formatCompact(appState.raceSpec.right.startCount)} • ${winnerSide} won (${elapsed}s)`
-      });
-      if (appState.stats.history.length > 30) appState.stats.history.pop();
-      saveStats();
+      // Log into Recent Races history if it wasn't just a repeat watch-only daily replay
+      if (!(appState.isDailyMatch && appState.userPick === 'NONE')) {
+        appState.stats.history.unshift({
+          hash: appState.raceSpec.hash,
+          isDaily: appState.isDailyMatch,
+          winner: winnerSide,
+          userPick: appState.userPick || 'NONE',
+          correct,
+          summary: `${formatCompact(appState.raceSpec.left.startCount)} vs ${formatCompact(appState.raceSpec.right.startCount)} • ${winnerSide} won (${elapsed}s)`
+        });
+        if (appState.stats.history.length > 30) appState.stats.history.pop();
+      }
 
+      saveAllStats();
       document.getElementById('result-overlay').classList.remove('hidden');
     }
 
@@ -1649,6 +2433,22 @@
       soundFX.muted = !soundFX.muted;
       document.getElementById('icon-sound-on').classList.toggle('hidden', soundFX.muted);
       document.getElementById('icon-sound-off').classList.toggle('hidden', !soundFX.muted);
+
+      const sBtn = document.getElementById('toggle-settings-audio');
+      const sKnob = document.getElementById('toggle-settings-audio-knob');
+      if (sBtn && sKnob) {
+        sBtn.setAttribute('aria-checked', String(!soundFX.muted));
+        if (!soundFX.muted) {
+          sBtn.classList.replace('bg-white/10', 'bg-emerald-500');
+          sKnob.classList.add('translate-x-6', 'bg-slate-950');
+          sKnob.classList.remove('bg-slate-400');
+        } else {
+          sBtn.classList.replace('bg-emerald-500', 'bg-white/10');
+          sKnob.classList.remove('translate-x-6', 'bg-slate-950');
+          sKnob.classList.add('bg-slate-400');
+        }
+      }
+
       if (!soundFX.muted) soundFX.ensureContext();
     }
 
@@ -1656,6 +2456,7 @@
       appState.proHud = !appState.proHud;
       updateProHudToggleUI();
       try { localStorage.setItem('bounce_race_hud', String(appState.proHud)); } catch (e) {}
+      renderScene();
     }
 
     function updateProHudToggleUI() {
@@ -1764,6 +2565,7 @@
       const wrapper = document.getElementById('canvas-wrapper');
       if (!wrapper) return;
       const rect = wrapper.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.max(1, Math.floor(rect.width * dpr));
       canvas.height = Math.max(1, Math.floor(rect.height * dpr));
@@ -1807,22 +2609,36 @@
       }
     }
 
+    function isColorLight(hex) {
+      const clean = hex.replace('#', '');
+      const bigint = parseInt(clean, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return (0.299 * r + 0.587 * g + 0.114 * b) > 155;
+    }
+
     function renderShaft(sim, boxX, boxY, boxW, boxH, accentColor) {
       const scaleX = boxW / SHAFT_W;
       const scaleY = boxH / SHAFT_H;
+      const radiusScale = Math.min(scaleX, scaleY);
+      const isLightPanel = isColorLight(appState.theme.panel || '#14161D');
+      const panelBg = appState.theme.panel || '#14161D';
 
-      // Subtle shaft background fill over the theme surface color
       ctx.fillStyle = hexToRgba(accentColor, 0.045);
       ctx.fillRect(boxX, boxY, boxW, boxH);
 
-      // Clip rendering strictly inside the shaft boundaries so trails/glows never bleed out
       ctx.save();
       ctx.beginPath();
       ctx.rect(boxX, boxY, boxW, boxH);
       ctx.clip();
 
-      // Draw All Floors (Full Level Always Visible)
       const activeFloor = sim.getActiveFloor();
+
+      // 1. Draw floor barriers & cached HP labels
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
       for (let i = 0; i < sim.floors.length; i++) {
         const floor = sim.floors[i];
         if (floor.broken) continue;
@@ -1831,9 +2647,8 @@
         const isActive = activeFloor && floor.index === activeFloor.index;
 
         if (isActive) {
-          // Bright glowing active floor barrier with hit-flash boost
           ctx.save();
-          ctx.strokeStyle = isColorLight(appState.theme.panel || '#14161D') ? '#0F172A' : '#FFFFFF';
+          ctx.strokeStyle = isLightPanel ? '#0F172A' : '#FFFFFF';
           ctx.lineWidth = 2.6 + floor.flash * 2.2;
           ctx.shadowColor = accentColor;
           ctx.shadowBlur = 10 + floor.flash * 14;
@@ -1843,7 +2658,6 @@
           ctx.stroke();
           ctx.restore();
         } else {
-          // Subtle divider line for upcoming floors
           ctx.strokeStyle = hexToRgba(accentColor, 0.28);
           ctx.lineWidth = 1.25;
           ctx.beginPath();
@@ -1852,96 +2666,117 @@
           ctx.stroke();
         }
 
-        // Floor HP Label centered on the line with theme-matched pill backing for legibility
-        const label = formatNumber(floor.hp);
+        const label = sim.getFloorLabel(floor);
         ctx.font = isActive
           ? '800 12px "JetBrains Mono", monospace'
           : '700 10.5px "JetBrains Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
 
-        const textW = ctx.measureText(label).width;
-        ctx.fillStyle = appState.theme.panel || '#14161D';
-        ctx.fillRect(boxX + boxW * 0.5 - textW * 0.5 - 4, fy - 6.5, textW + 8, 13);
+        const textW = label.length * 6.8 + 8;
+        ctx.fillStyle = panelBg;
+        ctx.fillRect(boxX + boxW * 0.5 - textW * 0.5, fy - 6.5, textW, 13);
 
-        const isLightPanel = isColorLight(appState.theme.panel || '#14161D');
         ctx.fillStyle = isActive
           ? (isLightPanel ? '#0F172A' : '#FFFFFF')
           : (isLightPanel ? 'rgba(15, 23, 42, 0.85)' : 'rgba(241, 245, 249, 0.85)');
         ctx.fillText(label, boxX + boxW * 0.5, fy + 0.5);
       }
 
-      // Draw Balls & Motion Trails
+      // 2. Batch trails and standard 1x balls into minimal canvas path calls
+      const drawTrails = sim.balls.length <= 130;
+      if (drawTrails) {
+        ctx.beginPath();
+        for (let i = 0; i < sim.balls.length; i++) {
+          const b = sim.balls[i];
+          if (b.trail.length > 1) {
+            const bx = boxX + b.x * scaleX;
+            const by = boxY + b.y * scaleY;
+            for (let t = 0; t < b.trail.length; t++) {
+              const tx = boxX + b.trail[t].x * scaleX;
+              const ty = boxY + b.trail[t].y * scaleY;
+              if (t === 0) ctx.moveTo(tx, ty);
+              else ctx.lineTo(tx, ty);
+            }
+            ctx.lineTo(bx, by);
+          }
+        }
+        ctx.strokeStyle = hexToRgba(accentColor, 0.26);
+        ctx.lineWidth = Math.max(4.5, 1.95 * radiusScale * 1.15);
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+
+      // Batch standard weight === 1 balls into a single fill path
+      ctx.beginPath();
+      const poweredBalls = [];
       for (let i = 0; i < sim.balls.length; i++) {
         const b = sim.balls[i];
         const bx = boxX + b.x * scaleX;
         const by = boxY + b.y * scaleY;
-        const br = Math.max(2.2, b.r * Math.min(scaleX, scaleY));
+        const br = Math.max(3.8, Math.min(8.6, b.r * radiusScale));
 
-        // Motion trail
-        if (b.trail.length > 1) {
-          ctx.beginPath();
-          for (let t = 0; t < b.trail.length; t++) {
-            const tx = boxX + b.trail[t].x * scaleX;
-            const ty = boxY + b.trail[t].y * scaleY;
-            if (t === 0) ctx.moveTo(tx, ty);
-            else ctx.lineTo(tx, ty);
-          }
-          ctx.lineTo(bx, by);
-          ctx.strokeStyle = hexToRgba(accentColor, 0.28);
-          ctx.lineWidth = br * 1.35;
-          ctx.lineCap = 'round';
-          ctx.stroke();
+        if (b.weight <= 1) {
+          ctx.moveTo(bx + br, by);
+          ctx.arc(bx, by, br, 0, Math.PI * 2);
+        } else {
+          poweredBalls.push({ b, bx, by, br });
         }
+      }
+      ctx.fillStyle = accentColor;
+      ctx.fill();
 
-        // Ball body
-        ctx.beginPath();
-        ctx.arc(bx, by, br, 0, Math.PI * 2);
-        ctx.fillStyle = b.weight > 1 ? '#FFFFFF' : accentColor;
-        ctx.fill();
+      // 3. Draw powered balls (weight > 1) and active absorb pulse rings
+      if (poweredBalls.length > 0) {
+        ctx.font = '800 7.5px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
-        // Super-Ball outer ring & multiplier tag
-        if (b.weight > 1) {
-          ctx.lineWidth = 1.6;
+        for (let i = 0; i < poweredBalls.length; i++) {
+          const { b, bx, by, br } = poweredBalls[i];
+
+          if (b.pulse > 0) {
+            ctx.strokeStyle = hexToRgba(accentColor, b.pulse * 0.72);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(bx, by, br + (1 - b.pulse) * 8.5, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          ctx.beginPath();
+          ctx.arc(bx, by, br, 0, Math.PI * 2);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fill();
+          ctx.lineWidth = 1.5;
           ctx.strokeStyle = accentColor;
           ctx.stroke();
-          if (br >= 6.5) {
+
+          if (br >= 6.6) {
             ctx.fillStyle = '#0D0E12';
-            ctx.font = '800 8px "JetBrains Mono", monospace';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(`${b.weight}×`, bx, by + 0.5);
+            ctx.fillText(formatCompact(b.weight), bx, by + 0.5);
           }
         }
       }
 
-      // Draw Particles belonging to this shaft
-      for (let i = 0; i < appState.particles.length; i++) {
-        const p = appState.particles[i];
-        if (p.sideId !== sim.sideId) continue;
-        const px = boxX + p.x * scaleX;
-        const py = boxY + p.y * scaleY;
-        ctx.fillStyle = hexToRgba(p.color, Math.max(0, p.life));
+      // 4. Batch impact & shatter particles
+      if (appState.particles.length > 0) {
         ctx.beginPath();
-        ctx.arc(px, py, p.size * scaleX * 0.6, 0, Math.PI * 2);
+        for (let i = 0; i < appState.particles.length; i++) {
+          const p = appState.particles[i];
+          if (p.sideId !== sim.sideId || p.life <= 0) continue;
+          const px = boxX + p.x * scaleX;
+          const py = boxY + p.y * scaleY;
+          const pr = Math.max(1.2, p.size * scaleX * 0.6);
+          ctx.moveTo(px + pr, py);
+          ctx.arc(px, py, pr, 0, Math.PI * 2);
+        }
+        ctx.fillStyle = hexToRgba(accentColor, 0.75);
         ctx.fill();
       }
 
       ctx.restore();
 
-      // Outer Shaft Border drawn cleanly on top
       ctx.strokeStyle = hexToRgba(accentColor, 0.48);
       ctx.lineWidth = 1.5;
       ctx.strokeRect(boxX, boxY, boxW, boxH);
-    }
-
-    function isColorLight(hex) {
-      const clean = hex.replace('#', '');
-      const bigint = parseInt(clean, 16);
-      const r = (bigint >> 16) & 255;
-      const g = (bigint >> 8) & 255;
-      const b = bigint & 255;
-      return (0.299 * r + 0.587 * g + 0.114 * b) > 155;
     }
 
     function renderCenterProgressBar(centerX, topY, height) {
@@ -1962,14 +2797,12 @@
       ctx.fillStyle = 'rgba(255,255,255,0.08)';
       ctx.fillRect(centerX - barW / 2, topY, barW, height);
 
-      // Left progress marker
       const ly = topY + lProg * height;
       ctx.fillStyle = appState.theme.left;
       ctx.beginPath();
       ctx.arc(centerX - 3, ly, 3.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Right progress marker
       const ry = topY + rProg * height;
       ctx.fillStyle = appState.theme.right;
       ctx.beginPath();
@@ -1983,6 +2816,8 @@
 
       const w = wrapper.clientWidth;
       const h = wrapper.clientHeight;
+      if (w <= 0 || h <= 0) return;
+
       ctx.clearRect(0, 0, w, h);
 
       const gap = appState.proHud ? 16 : 10;
@@ -1998,6 +2833,8 @@
 
     function updateLiveHUD() {
       if (!appState.leftSim || !appState.rightSim) return;
+      if (appState.tickCount % 3 !== 0 && appState.status === 'RUNNING') return;
+
       document.getElementById('left-count-display').textContent = formatCompact(appState.leftSim.totalLogicalBalls);
       document.getElementById('right-count-display').textContent = formatCompact(appState.rightSim.totalLogicalBalls);
 
@@ -2025,8 +2862,7 @@
       const frameDt = Math.min(0.05, (timestamp - appState.lastFrameTime) / 1000);
       appState.lastFrameTime = timestamp;
 
-      if (appState.status === 'RUNNING') {
-        // Dramatic photo-finish slow-mo if both sides are on the final floor with < 15% HP
+      if (appState.currentView === 'view-arena' && appState.status === 'RUNNING') {
         let timeScale = appState.simSpeed;
         const lFloor = appState.leftSim.getActiveFloor();
         const rFloor = appState.rightSim.getActiveFloor();
@@ -2039,7 +2875,7 @@
           timeScale = 0.35;
         }
 
-        appState.accumulator += frameDt * timeScale;
+        appState.accumulator = Math.min(MAX_ACCUMULATOR_SEC, appState.accumulator + frameDt * timeScale);
 
         while (appState.accumulator >= FIXED_DT && appState.status === 'RUNNING') {
           appState.accumulator -= FIXED_DT;
@@ -2058,8 +2894,11 @@
         updateLiveHUD();
       }
 
-      updateParticles(frameDt);
-      renderScene();
+      if (appState.currentView === 'view-arena') {
+        updateParticles(frameDt);
+        renderScene();
+      }
+
       requestAnimationFrame(mainLoop);
     }
 
@@ -2070,18 +2909,18 @@
     window.onload = function () {
       renderThemePresets();
       loadSavedData();
-      resizeCanvas();
+      updateBuilderPreviews();
 
-      // Update Daily Challenge label
-      document.getElementById('daily-seed-label').textContent = `Seed: ${getDailySeedHash()}`;
-
-      // Check URL ?seed=... parameter, otherwise start a fresh random race
+      // If opened via a shared ?seed=... URL, load that race straight into the Arena;
+      // otherwise land cleanly on the Home Screen!
       const params = new URLSearchParams(window.location.search);
       const urlSeed = params.get('seed');
       if (urlSeed) {
-        loadRaceByHash(urlSeed);
+        const isDaily = urlSeed.toUpperCase() === getDailySeedHash();
+        loadRaceByHash(urlSeed, { isDaily, watchOnly: isDaily && hasPlayedDailyToday() });
+        showView('view-arena');
       } else {
-        generateRandomRace();
+        showView('view-home');
       }
 
       requestAnimationFrame(mainLoop);
